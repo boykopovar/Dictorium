@@ -3,8 +3,11 @@
 
 #include <vector>
 #include <stdexcept>
+#include "../Contracts/IEnumerable/LinearEnumerator.h"
 
 namespace dtr{
+
+
 template<typename TKey, typename TValue>
 class IDictionary;
 
@@ -26,14 +29,15 @@ public:
     bool Remove(const TKey& key) override;
     void Clear() override;
     [[nodiscard]] size_t Count() const override;
-
-    const std::vector<std::pair<TKey, TValue>>& Items() const override {
-        return _dict;
-    }
+    
 
 private:
     TValue& GetValue(const TKey& key) override;
     const TValue& GetValue(const TKey& key) const override;
+
+    std::unique_ptr<IEnumerator<std::pair<TKey, TValue>>> _getItemsEnumerator() const override {
+        return std::make_unique<LinearEnumerator<TKey, TValue>>(_dict);
+    }
 
     std::vector<std::pair<TKey, TValue>> _dict;
 };

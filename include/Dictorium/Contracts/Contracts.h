@@ -3,6 +3,6 @@
 
 #include "DictProxy.h"
 #include "IDictionary.h"
-#include "IEnumerable.h"
+#include "IEnumerable/IEnumerable.h"
 
 #endif //CONTRACTS_H

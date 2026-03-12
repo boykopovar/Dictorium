@@ -4,6 +4,9 @@
 #include <vector>
 
 #include "DictProxy.h"
+#include "IEnumerable/IEnumerable.h"
+#include "IEnumerable/Iterator.h"
+#include "ItemsRange.h"
 
 namespace dtr {
 
@@ -21,19 +24,21 @@ public:
 
     virtual bool Remove(const TKey& key) = 0;
     virtual void Clear() = 0;
-    virtual size_t Count() const = 0;
-
-    virtual const std::vector<std::pair<TKey, TValue>>& Items() const = 0;
-
-    DictProxy<TKey, TValue> operator[](const TKey& key) noexcept {
-        return DictProxy<TKey, TValue>(this, key);
-    }
+    [[nodiscard]] virtual size_t Count() const = 0;
 
     virtual TValue& GetValue(const TKey& key) = 0;
     virtual const TValue& GetValue(const TKey& key) const = 0;
 
-protected:
+    virtual ItemsRange<TKey, TValue> Items() const {
+        return ItemsRange(_getItemsEnumerator());
+    }
+    
+    DictProxy<TKey, TValue> operator[](const TKey& key) noexcept {
+        return DictProxy<TKey, TValue>(this, key);
+    }
 
+protected:
+    virtual std::unique_ptr<IEnumerator<std::pair<TKey, TValue>>> _getItemsEnumerator() const = 0;
     friend class DictProxy<TKey, TValue>;
 };
 
