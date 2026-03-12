@@ -14,6 +14,8 @@ add_library(Dictorium STATIC
 
 target_include_directories(Dictorium PUBLIC include)
 
-add_executable(DictoriumTests tests/main.cpp)
+file(GLOB TEST_SOURCES tests/*.cpp)
+
+add_executable(DictoriumTests ${TEST_SOURCES})
 
 target_link_libraries(DictoriumTests Dictorium)

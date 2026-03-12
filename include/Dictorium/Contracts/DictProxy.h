@@ -26,12 +26,26 @@ public:
         return this->_dict->_get(_key);
     }
 
-    operator TValue() const {
-        return _dict->_get(_key);
+    TValue* operator->() {
+        return &(_dict->_get(_key));
     }
 
+    const TValue* operator*() const {
+        return &(_dict->_get(_key));
+    }
+
+    auto& operator[](size_t i) {
+        return _dict->_get(_key)[i];
+    }
+
+    const auto& operator[](size_t i) const {
+        return _dict->_get(_key)[i];
+    }
+
+    operator TValue() const = delete;
+
     friend std::ostream& operator<<(std::ostream& os, const DictProxy<TKey, TValue>& obj) {
-        return os << obj._key;
+        return os << obj._dict->_get(obj._key);
     }
 
 private:

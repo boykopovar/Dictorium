@@ -3,6 +3,7 @@
 
 
 #include "Contracts/Contracts.h"
-#include "Entities/TestDictionary.h"
+#include "Entities/LinearDictionary.h"
+#include "Entities/Console.h"
 
 #endif //DICTORIUM_H
