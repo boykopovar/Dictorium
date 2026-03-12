@@ -2,7 +2,7 @@
 #define LINEARDICTIONARYGETTERS_TPP
 
 template <class TKey, class TValue>
-TValue& LinearDictionary<TKey, TValue>::_get(const TKey& key) {
+TValue& LinearDictionary<TKey, TValue>::GetValue(const TKey& key) {
     for (auto& p : _dict) {
         if (p.first == key) return p.second;
     }
@@ -10,7 +10,7 @@ TValue& LinearDictionary<TKey, TValue>::_get(const TKey& key) {
 }
 
 template <class TKey, class TValue>
-const TValue& LinearDictionary<TKey, TValue>::_get(const TKey& key) const {
+const TValue& LinearDictionary<TKey, TValue>::GetValue(const TKey& key) const {
     for (auto& p : _dict) {
         if (p.first == key) return p.second;
     }

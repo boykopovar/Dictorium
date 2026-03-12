@@ -1,4 +1,3 @@
-#include <iostream>
 #include "Dictorium/Dictorium.h"
 
 using namespace dtr;

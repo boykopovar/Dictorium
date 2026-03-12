@@ -29,9 +29,10 @@ public:
         return DictProxy<TKey, TValue>(this, key);
     }
 
+    virtual TValue& GetValue(const TKey& key) = 0;
+    virtual const TValue& GetValue(const TKey& key) const = 0;
+
 protected:
-    virtual TValue& _get(const TKey& key) = 0;
-    virtual const TValue& _get(const TKey& key) const = 0;
 
     friend class DictProxy<TKey, TValue>;
 };

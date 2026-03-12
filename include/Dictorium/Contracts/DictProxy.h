@@ -2,6 +2,8 @@
 #define DICTPROXY_H
 
 #include <utility>
+#include <ostream>
+#include <cstddef>
 
 namespace dtr {
 
@@ -19,33 +21,33 @@ public:
     }
 
     operator TValue&() {
-        return this->_dict->_get(_key);
+        return this->_dict->GetValue(_key);
     }
 
     operator const TValue&() const {
-        return this->_dict->_get(_key);
+        return this->_dict->GetValue(_key);
     }
 
     TValue* operator->() {
-        return &(_dict->_get(_key));
+        return &(_dict->GetValue(_key));
     }
 
     const TValue* operator*() const {
-        return &(_dict->_get(_key));
+        return &(_dict->GetValue(_key));
     }
 
     auto& operator[](size_t i) {
-        return _dict->_get(_key)[i];
+        return _dict->GetValue(_key)[i];
     }
 
     const auto& operator[](size_t i) const {
-        return _dict->_get(_key)[i];
+        return _dict->GetValue(_key)[i];
     }
 
     operator TValue() const = delete;
 
     friend std::ostream& operator<<(std::ostream& os, const DictProxy<TKey, TValue>& obj) {
-        return os << obj._dict->_get(obj._key);
+        return os << obj._dict->GetValue(obj._key);
     }
 
 private:

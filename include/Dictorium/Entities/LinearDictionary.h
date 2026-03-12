@@ -2,6 +2,7 @@
 #define LINEARDICTIONARY_H
 
 #include <vector>
+#include <stdexcept>
 
 namespace dtr{
 template<typename TKey, typename TValue>
@@ -12,7 +13,7 @@ class LinearDictionary : public IDictionary<TKey, TValue> {
 public:
     LinearDictionary(std::initializer_list<std::pair<TKey, TValue>> init) {
         for (auto i = init.begin(), e = init.end(); i != e; ++i) {
-            (*this)[i->first] = i->second;
+            (*this).Add(i->first, i->second);
         }
     }
 
@@ -31,8 +32,8 @@ public:
     }
 
 private:
-    TValue& _get(const TKey& key) override;
-    const TValue& _get(const TKey& key) const override;
+    TValue& GetValue(const TKey& key) override;
+    const TValue& GetValue(const TKey& key) const override;
 
     std::vector<std::pair<TKey, TValue>> _dict;
 };
