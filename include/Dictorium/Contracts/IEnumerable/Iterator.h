@@ -19,6 +19,7 @@ public:
     }
 
     void operator++(){
+        if (!_e) return;
         _current = _e->MoveNext();
     }
 

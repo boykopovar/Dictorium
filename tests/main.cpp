@@ -2,7 +2,7 @@
 
 using namespace dtr;
 
-void print_dict(IDictionary<std::string, int>& dict);
+void print_json(const IDictionary<std::string, int>& dict);
 
 int main() {
   LinearDictionary<std::string, int> dict = {
@@ -13,8 +13,14 @@ int main() {
   dict.Add("qwe", 123);
   print(dict.ContainsKey("qwe"));
 
-  std::cout << dict["тест"] << std::endl;
-  std::cout << dict.Count() << std::endl;
+  std::cout << dict["тест"] << '\n';
+  std::cout << dict.Count() << '\n';
 
-  print_dict(dict);
+  print_json(dict);
+
+  const LinearDictionary<int, std::vector<int>> dict2 = {
+    {1, {1, 2, 3}},
+    {2, {4, 5, 6}}
+  };
+  std::cout << dict2;
 }

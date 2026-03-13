@@ -2,16 +2,27 @@
 #define IDICTIONARY_H
 
 #include <vector>
+#include <type_traits>
+#include <concepts>
+#include <typeinfo>
 
 #include "DictProxy.h"
 #include "IEnumerable/IEnumerable.h"
 #include "IEnumerable/Iterator.h"
 #include "ItemsRange.h"
+#include "IFormattable.h"
+
 
 namespace dtr {
 
+template<typename T>
+concept StreamWritable =
+    requires(std::ostream& os, T value) {
+        os << value;
+    };
+
 template<typename TKey, typename TValue>
-class IDictionary {
+class IDictionary : public IFormattable {
 public:
     IDictionary() = default;
     virtual ~IDictionary() = default;
@@ -29,13 +40,42 @@ public:
     virtual TValue& GetValue(const TKey& key) = 0;
     virtual const TValue& GetValue(const TKey& key) const = 0;
 
-    virtual ItemsRange<TKey, TValue> Items() const {
+    void WriteToStream(std::ostream& os) const override {
+        if constexpr (!StreamWritable<TKey> && !StreamWritable<TValue>){
+            os << "<class 'IDictionary': TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
+        }
+        else
+        {
+            bool first = true;
+            os << '{' << '\n';
+
+            for (auto& [key, value] : Items()) {
+                if (!first) os << ',' << '\n';
+                first = false;
+                os << "    ";
+
+                if constexpr (std::is_same_v<TKey, std::string>) os << '"' << key << '"';
+                else if constexpr (StreamWritable<TKey>) os << key;
+                else os << "<TKey=" << typeid(TKey).name() << '>';
+
+                os << ": ";
+
+                if constexpr (std::is_same_v<TValue, std::string>) os << '"' << value << '"';
+                else if constexpr (StreamWritable<TValue>) os << value;
+                else os << "<TValue=" << typeid(value).name() << '>';
+            }
+            os << '\n' << '}';
+        }
+    }
+
+    ItemsRange<TKey, TValue> Items() const {
         return ItemsRange(_getItemsEnumerator());
     }
     
     DictProxy<TKey, TValue> operator[](const TKey& key) noexcept {
         return DictProxy<TKey, TValue>(this, key);
     }
+
 
 protected:
     virtual std::unique_ptr<IEnumerator<std::pair<TKey, TValue>>> _getItemsEnumerator() const = 0;
