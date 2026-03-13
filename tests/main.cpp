@@ -18,9 +18,10 @@ int main() {
 
   print_json(dict);
 
-  const LinearDictionary<int, std::vector<int>> dict2 = {
+  LinearDictionary<int, std::vector<int>> dict2 = {
     {1, {1, 2, 3}},
     {2, {4, 5, 6}}
   };
   std::cout << dict2;
+
 }

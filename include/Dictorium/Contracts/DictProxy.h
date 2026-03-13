@@ -4,6 +4,7 @@
 #include <utility>
 #include <ostream>
 #include <cstddef>
+#include "../Entities/Console.h"
 
 namespace dtr {
 

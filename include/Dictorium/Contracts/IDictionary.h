@@ -3,23 +3,17 @@
 
 #include <vector>
 #include <type_traits>
-#include <concepts>
-#include <typeinfo>
+
 
 #include "DictProxy.h"
 #include "IEnumerable/IEnumerable.h"
 #include "IEnumerable/Iterator.h"
 #include "ItemsRange.h"
 #include "IFormattable.h"
-
+#include "../Entities/Console.h"
 
 namespace dtr {
 
-template<typename T>
-concept StreamWritable =
-    requires(std::ostream& os, T value) {
-        os << value;
-    };
 
 template<typename TKey, typename TValue>
 class IDictionary : public IFormattable {
