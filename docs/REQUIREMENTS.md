@@ -31,6 +31,28 @@ int main() {
 }
 ```
 
+Для `ToString()`, `operator<<` и `WriteToStream` автоматически  берется реализация из интерфейса, ожидая реализованный `_getItemsEnumerator()`. Что позволяет удобно просматривать содержимое всем наследникам `IDictionary`:
+```c++
+#include "Dictorium/Dictorium.h"
+
+using namespace dtr;
+
+int main() {
+  LinearDictionary<int, std::string> dict = {
+    {1, "test1"},
+    {2, "test2"}
+  };
+  std::cout << dict;
+}
+```
+Вывод:
+```json
+{
+    "1": "test1",
+    "2": "test2"
+}
+```
+
 ### Описание реализации
 
 `md` файл описания класса должен содержать таблицу:
@@ -47,4 +69,3 @@ int main() {
 | Count            |           |                  |           |
 | Items            |           |                  |           |
 | initializer_list |           |                  |           |
-

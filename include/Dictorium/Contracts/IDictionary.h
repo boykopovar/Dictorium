@@ -54,8 +54,7 @@ public:
                 first = false;
                 os << "    ";
 
-                if constexpr (std::is_same_v<TKey, std::string>) os << '"' << key << '"';
-                else if constexpr (StreamWritable<TKey>) os << key;
+                if constexpr (StreamWritable<TKey>) os << '"' << key << '"';
                 else os << "<TKey=" << typeid(TKey).name() << '>';
 
                 os << ": ";
