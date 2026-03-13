@@ -25,7 +25,7 @@ template<typename TKey, typename TValue>
 class IDictionary : public IFormattable {
 public:
     IDictionary() = default;
-    virtual ~IDictionary() = default;
+    ~IDictionary() override = default;
 
     virtual bool ContainsKey(const TKey& key) const = 0;
     virtual bool TryGetValue(const TKey& key, TValue& value) const = 0;
