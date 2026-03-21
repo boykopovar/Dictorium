@@ -15,21 +15,6 @@ requires(std::ostream& os, T value) {
 };
 
 template<typename T>
-concept CPrintable = requires(std::ostream& os, T value){ os << value; };
-
-
-template<CPrintable T>
-inline void print(T&& last) {
-    std::cout << last << '\n';
-}
-
-template <CPrintable T, CPrintable... Args>
-inline void print(T&& first, Args&&... args) {
-    std::cout<<first<<' ';
-    print(std::forward<Args>(args)...);
-}
-
-template<typename T>
 inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector) {
     if constexpr (StreamWritable<T>) {
         os << '[';
@@ -49,6 +34,23 @@ inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector) 
         return os;
     }
 }
+
+template<typename T>
+concept CPrintable = requires(std::ostream& os, T value){ os << value; };
+
+
+template<CPrintable T>
+inline void print(T&& last) {
+    std::cout << last << '\n';
+}
+
+template <CPrintable T, CPrintable... Args>
+inline void print(T&& first, Args&&... args) {
+    std::cout<<first<<' ';
+    print(std::forward<Args>(args)...);
+}
+
+
 
 inline std::string input() {
     std::string input;
