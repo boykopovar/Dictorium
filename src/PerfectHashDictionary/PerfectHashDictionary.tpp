@@ -1,6 +1,10 @@
 #ifndef PERFECTDICTIONARY_TPP
 #define PERFECTDICTIONARY_TPP
 
+template <typename TKey, typename TValue>
+PerfectHashDictionary<TKey, TValue>::PerfectHashDictionary(std::initializer_list<std::pair<TKey, TValue>> init) {
+    throw std::logic_error("Not implemented");
+}
 
 template <typename TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::ContainsKey(const TKey& key) const {

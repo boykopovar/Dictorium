@@ -6,7 +6,7 @@ void print_json(const IDictionary<std::string, int>& dict);
 
 
 int main() {
-  LinearDictionary<std::string, int> dict = {
+  PerfectHashDictionary<std::string, int> dict = {
     {"test1", 1},
     {"test2", 2},
   };
