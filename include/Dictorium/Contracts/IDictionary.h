@@ -118,12 +118,12 @@ public:
     }
 
     /// <summary>
-    /// Предоставляет доступ к значению по ключу через прокси. Ссылается на `GetValue`.
+    /// Предоставляет доступ к значению по ключу. Ссылается на `GetValue`.
     /// </summary>
     /// <param name="key">Ключ.</param>
-    /// <returns>Прокси-объект для доступа к значению.</returns>
-    DictProxy<TKey, TValue> operator[](const TKey& key) noexcept {
-        return DictProxy<TKey, TValue>(this, key);
+    /// <returns>Ссылка для доступа к значению.</returns>
+    TValue& operator[](const TKey& key) noexcept {
+        return GetValue(key);
     }
 
 

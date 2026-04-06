@@ -10,8 +10,11 @@ int main() {
     {"test1", 1},
     {"test2", 2},
   };
+
   std::cout << dict["test1"] << std::endl;
   dict["test3"] = 4;
+  std::cout << dict["test3"] << std::endl;
+  return 0;
   dict.Add("qwe", 123);
   print(dict.ContainsKey("qwe"));
 

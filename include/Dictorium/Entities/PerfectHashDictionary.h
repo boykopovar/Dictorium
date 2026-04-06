@@ -10,6 +10,7 @@
 #include "../Contracts/IEnumerable/IEnumerable.h"
 
 #define PERFECTHASH_SALT 2654435761ULL
+#define PERFECTHASH_DEPRECATED_POSTFIX "This method of PerfectHashDictionary possibly triggers full hard rebuild. Prefer initializer_list constructor."
 
 namespace dtr{
 
@@ -41,12 +42,15 @@ public:
     bool ContainsKey(const TKey& key) const override;
     bool TryGetValue(const TKey& key, TValue& value) const override;
 
-    [[deprecated("PerfectHashDictionary::Add triggers full rebuild. "
-        "Prefer initializer_list constructor.")]]
+    [[deprecated(PERFECTHASH_DEPRECATED_POSTFIX)]]
     void Add(const TKey& key, const TValue& value) override;
+
+    [[deprecated(PERFECTHASH_DEPRECATED_POSTFIX)]]
     void InsertOrAssign(const TKey& key, const TValue& value) override;
 
+    [[deprecated(PERFECTHASH_DEPRECATED_POSTFIX)]]
     bool Remove(const TKey& key) override;
+
     void Clear() override;
     [[nodiscard]] size_t Count() const override;
 

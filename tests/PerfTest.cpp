@@ -3,7 +3,7 @@
 #include "Dictorium/Dictorium.h"
 #include "Utils/TestUtils.h"
 
-#define DICT_PERF_KEYS 1'000
+#define DICT_PERF_KEYS 1'000'000
 #define DICT_PERF_KEY_LEN 100
 #define DICT_PERF_TEST_INIT false
 
@@ -23,19 +23,20 @@ int main() {
     PerfectHashDictionary<std::string, double> dict(data.begin(), data.end());
     const auto dictInitTime = DurationNs(dictInitStart, GetNow());
 
-    const auto phTime1 = Benchmark(data, [&](const std::string& key) {
-        return dict.GetValue(key);
-    });
-    const auto umapTime1 = Benchmark(data, [&](const std::string& key) {
+    const auto umapFunc = [&](const std::string& key) {
         return umap[key];
-    });
+    };
 
-    const auto phTime2 = Benchmark(data, [&](const std::string& key) {
-        return dict.GetValue(key);
-    });
-    const auto umapTime2 = Benchmark(data, [&](const std::string& key) {
-        return umap[key];
-    });
+    IDictionary<std::string, double>& dictRef = dict;
+    const auto dictFunc = [&](const std::string& key) {
+        return dictRef[key];
+    };
+
+    const auto phTime1 = Benchmark(data, dictFunc);
+    const auto umapTime1 = Benchmark(data, umapFunc);
+
+    const auto phTime2 = Benchmark(data, dictFunc);
+    const auto umapTime2 = Benchmark(data, umapFunc);
 
     const auto umapTime = (umapTime1 + umapTime2) / 2;
     const auto phTime = (phTime1 + phTime2) / 2;
