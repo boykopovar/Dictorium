@@ -34,7 +34,7 @@ public:
     }
 
     template<PairIterator<TKey, TValue> TIter>
-    PerfectHashDictionary(TIter begin, TIter end, size_t size){
+    PerfectHashDictionary(TIter begin, TIter end){
         _build(begin, end, std::distance(begin, end));
     }
 

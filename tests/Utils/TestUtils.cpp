@@ -30,5 +30,12 @@ DataStr GenerateDataStr(const size_t count, const size_t length) {
     return {seen.begin(), seen.end()};
 }
 
+DateTime GetNow() {
+    return std::chrono::high_resolution_clock::now();
+}
+
+size_t DurationNs(const DateTime start, const DateTime end) {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+}
 
 
