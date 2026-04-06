@@ -4,12 +4,20 @@
 
 template <typename TKey, typename TValue>
 TValue& PerfectHashDictionary<TKey, TValue>::GetValue(const TKey& key) {
-    throw std::logic_error("Not implemented");
+    PhBucket<TKey, TValue>& bucket = _buckets[_hash(key, _globalSeed, _count)];
+    auto& [value, exists] = bucket.Values[_hash(key, bucket.Seed, bucket.Values.size())];
+
+    if (!exists) throw std::out_of_range("Key not found");
+    return value;
 }
 
 template <typename TKey, typename TValue>
 const TValue& PerfectHashDictionary<TKey, TValue>::GetValue(const TKey& key) const {
-    throw std::logic_error("Not implemented");
+    const PhBucket<TKey, TValue>& bucket = _buckets[_hash(key, _globalSeed, _count)];
+    const auto& [value, exists] = bucket.Values[_hash(key, bucket.Seed, bucket.Values.size())];
+
+    if (exists) throw std::out_of_range("Key not found");
+    return value;
 }
 
 template <typename TKey, typename TValue>
