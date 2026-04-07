@@ -7,9 +7,10 @@ template<PairIterator<TKey, TValue> TIter>
 void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t size) {
     this->_count = size;
     this->_tableSize = size;
+    auto buckets_list = std::vector<std::vector<std::pair<TKey, TValue>>>(_tableSize);
 
     while (true) {
-        auto buckets_list = std::vector<std::vector<std::pair<TKey, TValue>>>(_tableSize);
+        for (auto& bucket : buckets_list) bucket.clear();
         this->_globalSeed = _randomNum();
 
         for (auto it = begin; it != end; ++it) {
@@ -26,7 +27,7 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
 
             for (auto& bucket : buckets_list) {
                 if (bucket.size() == 0) continue;
-                auto bucketInnerSize = _nextPrime(std::pow(bucket.size(), 2));
+                auto bucketInnerSize = _nextPrime(bucket.size() * bucket.size());
 
                 auto globalIndex = _hash(bucket[0].first, _globalSeed, _tableSize);
                 auto bucketSeed = _findSeed(bucket, bucketInnerSize);
@@ -45,7 +46,7 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
 
             if (needNewGlobalSeed) {
                 _tableSize *= 2;
-                std::cout << "Table size: " << _tableSize << std::endl;
+                buckets_list.resize(_tableSize);
                 continue;
             }
             return;
