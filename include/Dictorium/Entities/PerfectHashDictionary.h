@@ -48,7 +48,7 @@ public:
     [[deprecated(PERFECTHASH_DEPRECATED_POSTFIX)]]
     void InsertOrAssign(const TKey& key, const TValue& value) override;
 
-    [[deprecated(PERFECTHASH_DEPRECATED_POSTFIX)]]
+    [[deprecated("Lazy removal (tombstone). Element is not phisically removed.")]]
     bool Remove(const TKey& key) override;
 
     void Clear() override;

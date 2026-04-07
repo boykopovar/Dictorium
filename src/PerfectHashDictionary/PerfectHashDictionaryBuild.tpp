@@ -93,17 +93,19 @@ uint64_t PerfectHashDictionary<TKey, TValue>::_findSeed(const std::vector<std::p
 
 template<typename TKey, typename TValue>
 [[nodiscard]] size_t PerfectHashDictionary<TKey, TValue>::_nextPrime(size_t n) const {
-    if (n<2) return 2;
+    if (n<=2) return 2;
+    if (n%2 == 0) ++n;
+
     while (true) {
         bool prime = true;
-        for (size_t i = 2; i * i <= n; ++i) {
+        for (size_t i = 3; i * i <= n; i+=2) {
             if (n%i == 0) {
                 prime = false;
                 break;
             }
         }
         if (prime) return n;
-        ++n;
+        n+=2;
     }
 }
 
