@@ -11,6 +11,7 @@
 
 #define PERFECTHASH_SALT 2654435761ULL
 #define PERFECTHASH_DEPRECATED_POSTFIX "This method of PerfectHashDictionary possibly triggers full hard rebuild. Prefer initializer_list constructor."
+#define PERFECTHASH_DICT_NAME "PerfectHashDictionary"
 
 namespace dtr{
 

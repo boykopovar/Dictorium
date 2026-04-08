@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <stdexcept>
-#include "../Contracts/IEnumerable/LinearEnumerator.h"
+#include "LinearDictionary/LinearEnumerator.tpp"
 
 namespace dtr{
 
@@ -111,6 +111,10 @@ public:
     /// <returns>Константная ссылка на значение.</returns>
     /// <exception cref="std::out_of_range">Выбрасывается, если ключ не найден.</exception>
     const TValue& GetValue(const TKey& key) const override;
+
+    auto begin() const { _dict.begin();}
+    auto end() const { _dict.end();}
+
 private:
 
     std::unique_ptr<IEnumerator<std::pair<TKey, TValue>>> _getItemsEnumerator() const override {

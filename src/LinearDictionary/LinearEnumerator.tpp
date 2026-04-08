@@ -3,7 +3,7 @@
 
 #include <utility>
 #include <vector>
-#include "IEnumerable.h"
+#include "Dictorium/Contracts/IEnumerable/IEnumerable.h"
 
 namespace dtr{
 

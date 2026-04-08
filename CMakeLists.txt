@@ -5,7 +5,7 @@ project(Dictorium)
 set(CMAKE_CXX_STANDARD 20)
 
 set(DICTORIUM_SOURCES
-        tests/Utils/PrintUtils.cpp
+       src/dtr.cpp
 )
 
 add_library(Dictorium STATIC
@@ -13,6 +13,7 @@ add_library(Dictorium STATIC
 )
 
 target_include_directories(Dictorium PUBLIC include)
+target_include_directories(Dictorium PUBLIC src)
 
 add_executable(DictoriumRun
         tests/main.cpp

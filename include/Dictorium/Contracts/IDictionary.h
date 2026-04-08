@@ -10,10 +10,27 @@
 #include "IEnumerable/Iterator.h"
 #include "ItemsRange.h"
 #include "IFormattable.h"
-#include "../Entities/Console.h"
+#include "Dictorium/Entities/Console.h"
+
 
 namespace dtr {
 
+template<typename TCollection, typename TValue>
+void _writeValues(std::ostream& os, const TCollection& self)
+    requires ValuesCollection<TCollection, TValue>
+{
+    os << '[';
+    bool first = true;
+    for (auto& value : self.Values()) {
+        if (!first) {
+            os << ',' << ' ';
+            first = false;
+        }
+        os << value;
+    }
+
+    os << ']';
+}
 
 template<typename TKey, typename TValue>
 class IDictionary : public IFormattable {
@@ -83,8 +100,23 @@ public:
     /// </summary>
     /// <param name="os">Выходной поток.</param>
     void WriteToStream(std::ostream& os) const override {
+        using self = std::remove_reference_t<decltype(*this)>;
+        if constexpr (!ItemsCollection<self, TKey, TValue>) {
+            if constexpr (ValuesCollection<self, TValue>) {
+                os << '<';
+                _writeClassName(os);
+                os << "\nValues: ";
+                _writeValues<self, TValue>(os, static_cast<const self&>(*this));
+                os << '>';
+                return;
+            }
+            os << '<';
+            _writeClassName(os);
+            os << '>';
+            return;
+        }
         if constexpr (!StreamWritable<TKey> && !StreamWritable<TValue>){
-            os << "<class 'IDictionary': TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
+            _writeClassName(os);
         }
         else
         {
@@ -117,6 +149,7 @@ public:
         return ItemsRange(_getItemsEnumerator());
     }
 
+
     /// <summary>
     /// Предоставляет доступ к значению по ключу. Ссылается на `GetValue`.
     /// </summary>
@@ -134,6 +167,9 @@ protected:
     /// <returns>Указатель на IEnumerator.</returns>
     virtual std::unique_ptr<IEnumerator<std::pair<TKey, TValue>>> _getItemsEnumerator() const = 0;
     friend class DictProxy<TKey, TValue>;
+    void _writeClassName(std::ostream& os) const {
+        os << "class 'IDictionary': TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name();
+    }
 };
 
 }
