@@ -51,7 +51,7 @@ concept ItemsCollection = requires(const TCollection c) {
 
 template <typename TCollection, typename TValue>
 concept ValuesCollection = requires(const TCollection c) {
-    c.Items();
+    c.Values();
 
     requires SizedIterable<decltype(c.Values())>;
 

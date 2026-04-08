@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <stdexcept>
-#include "LinearDictionary/LinearEnumerator.tpp"
 
 namespace dtr{
 
@@ -112,15 +111,19 @@ public:
     /// <exception cref="std::out_of_range">Выбрасывается, если ключ не найден.</exception>
     const TValue& GetValue(const TKey& key) const override;
 
-    auto begin() const { _dict.begin();}
-    auto end() const { _dict.end();}
+    auto begin() const { return _dict.begin();}
+    auto end() const { return _dict.end();}
 
-private:
-
-    std::unique_ptr<IEnumerator<std::pair<TKey, TValue>>> _getItemsEnumerator() const override {
-        return std::make_unique<LinearEnumerator<TKey, TValue>>(_dict);
+    std::ostream& WriteToStream(std::ostream& os) const override {
+        if constexpr (!StreamWritable<TValue> && ! StreamWritable<TKey>) {
+            return os << "<class 'LinearDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
+        }
+        else {
+            return this->_writeItems(os, *this);
+        }
     }
 
+private:
     std::vector<std::pair<TKey, TValue>> _dict;
 };
 

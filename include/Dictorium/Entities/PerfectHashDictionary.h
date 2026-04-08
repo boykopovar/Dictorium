@@ -7,7 +7,6 @@
 #include <utility>
 #include <stdexcept>
 #include"../Contracts/Concepts.h"
-#include "../Contracts/IEnumerable/IEnumerable.h"
 
 #define PERFECTHASH_SALT 2654435761ULL
 #define PERFECTHASH_DEPRECATED_POSTFIX "This method of PerfectHashDictionary possibly triggers full hard rebuild. Prefer initializer_list constructor."
@@ -54,10 +53,6 @@ public:
 
     void Clear() override;
     [[nodiscard]] size_t Count() const override;
-
-    std::unique_ptr<IEnumerator<std::pair<TKey, TValue>>> _getItemsEnumerator() const override {
-        throw std::logic_error("Not implemented");
-    }
 
     TValue& GetValue(const TKey& key) override;
     const TValue& GetValue(const TKey& key) const override;

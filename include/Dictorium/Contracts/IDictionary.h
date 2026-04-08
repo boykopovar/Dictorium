@@ -6,31 +6,11 @@
 
 
 #include "DictProxy.h"
-#include "IEnumerable/IEnumerable.h"
-#include "IEnumerable/Iterator.h"
-#include "ItemsRange.h"
 #include "IFormattable.h"
 #include "Dictorium/Entities/Console.h"
 
 
 namespace dtr {
-
-template<typename TCollection, typename TValue>
-void _writeValues(std::ostream& os, const TCollection& self)
-    requires ValuesCollection<TCollection, TValue>
-{
-    os << '[';
-    bool first = true;
-    for (auto& value : self.Values()) {
-        if (!first) {
-            os << ',' << ' ';
-            first = false;
-        }
-        os << value;
-    }
-
-    os << ']';
-}
 
 template<typename TKey, typename TValue>
 class IDictionary : public IFormattable {
@@ -99,56 +79,9 @@ public:
     /// Выводит содержимое словаря в поток.
     /// </summary>
     /// <param name="os">Выходной поток.</param>
-    void WriteToStream(std::ostream& os) const override {
-        using self = std::remove_reference_t<decltype(*this)>;
-        if constexpr (!ItemsCollection<self, TKey, TValue>) {
-            if constexpr (ValuesCollection<self, TValue>) {
-                os << '<';
-                _writeClassName(os);
-                os << "\nValues: ";
-                _writeValues<self, TValue>(os, static_cast<const self&>(*this));
-                os << '>';
-                return;
-            }
-            os << '<';
-            _writeClassName(os);
-            os << '>';
-            return;
-        }
-        if constexpr (!StreamWritable<TKey> && !StreamWritable<TValue>){
-            _writeClassName(os);
-        }
-        else
-        {
-            bool first = true;
-            os << '{' << '\n';
-
-            for (auto& [key, value] : Items()) {
-                if (!first) os << ',' << '\n';
-                first = false;
-                os << "    ";
-
-                if constexpr (StreamWritable<TKey>) os << '"' << key << '"';
-                else os << "<TKey=" << typeid(TKey).name() << '>';
-
-                os << ": ";
-
-                if constexpr (std::is_same_v<TValue, std::string>) os << '"' << value << '"';
-                else if constexpr (StreamWritable<TValue>) os << value;
-                else os << "<TValue=" << typeid(value).name() << '>';
-            }
-            os << '\n' << '}';
-        }
+    std::ostream& WriteToStream(std::ostream& os) const override {
+        return os << "<class 'IDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
     }
-
-    /// <summary>
-    /// Возвращает диапазон для ленивой итерации по элементам словаря.
-    /// </summary>
-    /// <returns>Диапазон элементов.</returns>
-    ItemsRange<TKey, TValue> Items() const {
-        return ItemsRange(_getItemsEnumerator());
-    }
-
 
     /// <summary>
     /// Предоставляет доступ к значению по ключу. Ссылается на `GetValue`.
@@ -161,15 +94,52 @@ public:
 
 
 protected:
-    /// <summary>
-    /// Возвращает IEnumerator элементов словаря.
-    /// </summary>
-    /// <returns>Указатель на IEnumerator.</returns>
-    virtual std::unique_ptr<IEnumerator<std::pair<TKey, TValue>>> _getItemsEnumerator() const = 0;
     friend class DictProxy<TKey, TValue>;
-    void _writeClassName(std::ostream& os) const {
-        os << "class 'IDictionary': TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name();
+
+    template<typename TRange>
+    requires PairIterator<decltype(std::begin(std::declval<TRange>())), TKey, TValue>
+    std::ostream& _writeItems(std::ostream& os, const TRange& range) const  {
+        bool first = true;
+        os << '{' << '\n';
+
+        for (auto& [key, value] : range) {
+            if (!first) os << ',' << '\n';
+            first = false;
+            os << "    ";
+
+            if constexpr (StreamWritable<TKey>) os << '"' << key << '"';
+            else os << "<TKey=" << typeid(TKey).name() << '>';
+
+            os << ": ";
+
+            if constexpr (std::is_same_v<TValue, std::string>) os << '"' << value << '"';
+            else if constexpr (StreamWritable<TValue>) os << value;
+            else os << "<TValue=" << typeid(value).name() << '>';
+        }
+        return os << '\n' << '}';
     }
+
+    template<typename TRange>
+    requires ValuesIterator<decltype(std::begin(std::declval<TRange>())), TValue>
+    std::ostream& _writeValues(std::ostream& os, const TRange& range) const {
+        if constexpr (!StreamWritable<TValue>) {
+            return os << " TValue=" << typeid(TValue).name();
+        }
+        else {
+            os << '[';
+            bool first = true;
+            for (auto& value : range) {
+                if (!first) {
+                    os << ',' << ' ';
+                    first = false;
+                }
+                os << value;
+            }
+
+            return os << ']';
+        }
+    }
+
 };
 
 }
