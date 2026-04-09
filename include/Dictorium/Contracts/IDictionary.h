@@ -88,7 +88,7 @@ public:
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <returns>Ссылка для доступа к значению.</returns>
-    TValue& operator[](const TKey& key) noexcept {
+    TValue& operator[](const TKey& key) {
         return GetValue(key);
     }
 

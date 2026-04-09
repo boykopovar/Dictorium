@@ -65,7 +65,7 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
             bucket.Offset = flatSize;
             flatSize += bucket.Size;
         }
-        _values.assign(flatSize, {TValue{}, false});
+        _values.assign(flatSize, {TKey{}, TValue{}, false});
 
         for (auto& bucket : buckets_list) {
             if (bucket.empty()) continue;
@@ -74,8 +74,9 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
 
             for (auto& [key, value] : bucket) {
                 size_t flatIndex = bucketFromFlat.Offset + _hash(key, bucketFromFlat.Seed, bucketFromFlat.Size);
-                _values[flatIndex].first = value;
-                _values[flatIndex].second = true;
+                _values[flatIndex].Key = key;
+                _values[flatIndex].Value = value;
+                _values[flatIndex].Exists = true;
             }
         }
 

@@ -13,9 +13,9 @@ uint64_t PerfectHashDictionary<TKey, TValue>::_findIndex(const TKey &key) const 
 
 template <typename TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::ContainsKey(const TKey& key) const {
-    auto flatIndex = _findIndex(key);
-    if (flatIndex == -1) return false;
-    return true;
+    auto& slot = _getExistedSlot(key);
+    if (!slot.Exists) return false;
+    return slot.Key == key;
 }
 
 template<typename TKey, typename TValue>
@@ -32,22 +32,30 @@ TValue& PerfectHashDictionary<TKey, TValue>::GetValue(const TKey& key) {
 
 template <typename TKey, typename TValue>
 const TValue& PerfectHashDictionary<TKey, TValue>::GetValue(const TKey& key) const {
-    auto flatIndex = _findIndex(key);
-    if (flatIndex == -1) throw std::out_of_range("Key not found");
+    auto& slot = _getExistedSlot(key);
+    if (!slot.Exists) throw std::out_of_range("Key not found");
+    return slot.Value;
+}
 
-    auto& [value, exists] = _values[flatIndex];
-    if (!exists) throw std::out_of_range("Key not found");
-    return value;
+template <typename TKey, typename TValue>
+const TValue& PerfectHashDictionary<TKey, TValue>::GetValidatedValue(const TKey& key) const {
+    auto& slot = _getExistedSlot(key);
+    if(slot.Key!=key) throw std::out_of_range("Key not found");
+    return slot.Value;
+}
+
+template <typename TKey, typename TValue>
+TValue& PerfectHashDictionary<TKey, TValue>::GetValidatedValue(const TKey& key) {
+    return const_cast<TValue&>(
+        static_cast<const PerfectHashDictionary<TKey, TValue>*>(this)->GetValidatedValue(key)
+    );
 }
 
 template <typename TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::TryGetValue(const TKey& key, TValue& value) const {
-    auto flatIndex = _findIndex(key);
-    if (flatIndex == -1) return false;
-
-    auto& [dictValue, exists] = _values[flatIndex];
-    if (!exists) return false;
-    value = dictValue;
+    auto& slot = _getExistedSlot(key);
+    if (!slot.Exists) return false;
+    value = slot.Value;
     return true;
 }
 

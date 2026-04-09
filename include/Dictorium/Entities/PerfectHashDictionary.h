@@ -11,6 +11,7 @@
 #define PERFECTHASH_SALT 2654435761ULL
 #define PERFECTHASH_DEPRECATED_POSTFIX "This method of PerfectHashDictionary possibly triggers full hard rebuild. Prefer initializer_list constructor."
 #define PERFECTHASH_DICT_NAME "PerfectHashDictionary"
+#define PERFECTHASH_DEPRECATED_KEYS "Valid only for keys from the original set"
 
 namespace dtr{
 
@@ -20,12 +21,19 @@ struct PhBucket {
     uint64_t Seed;
 };
 
+
 template<typename TKey, typename TValue>
 class IDictionary;
 
 template<typename TKey, typename TValue>
 class PerfectHashDictionary : public IDictionary<TKey, TValue> {
 public:
+    struct PhSlot {
+        TKey Key;
+        TValue Value;
+        bool Exists;
+    };
+
     PerfectHashDictionary() = default;
     PerfectHashDictionary(std::initializer_list<std::pair<TKey, TValue>> init) {
         _build(init.begin(), init.end(), init.size());
@@ -55,7 +63,10 @@ public:
     [[nodiscard]] size_t Count() const override;
 
     TValue& GetValue(const TKey& key) override;
+    TValue& GetValidatedValue(const TKey& key);
+
     const TValue& GetValue(const TKey& key) const override;
+    const TValue& GetValidatedValue(const TKey& key) const;
 
     std::ostream& WriteToStream(std::ostream& os) const override {
         if constexpr (!StreamWritable<TValue> && ! StreamWritable<TKey>) {
@@ -86,7 +97,7 @@ private:
     uint64_t _tableSize;
 
     std::vector<PhBucket> _buckets;
-    std::vector<std::pair<TValue, bool>> _values;
+    std::vector<PhSlot> _values;
 
     [[nodiscard]] uint64_t _randomNum() const;
     uint64_t _findSeed(const std::vector<std::pair<TKey, TValue>>& bucket, size_t tableSize) const;
@@ -96,6 +107,15 @@ private:
 
     template<PairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);
+
+    const PhSlot& _getExistedSlot(const TKey& key) const {
+        auto flatIndex = _findIndex(key);
+        if (flatIndex == -1) throw std::out_of_range("Key not found");
+
+        auto& slot = _values[flatIndex];
+        if (!slot.Exists) throw std::out_of_range("Key not found");
+        return slot;
+    }
 };
 
 #include "PerfectHashDictionary/PerfectHashDictionaryBuild.tpp"
