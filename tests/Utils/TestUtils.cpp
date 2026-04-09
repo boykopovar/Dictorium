@@ -31,22 +31,6 @@ DataStr GenerateDataStr(const size_t count, const size_t length) {
     return {seen.begin(), seen.end()};
 }
 
-std::vector<std::pair<double, double>> GenerateDataNum(const size_t count) {
-    static std::mt19937 rng(std::random_device{}());
-    std::uniform_real_distribution<double> dist(
-        std::numeric_limits<double>::min(),
-        std::numeric_limits<double>::max()
-    );
-
-    std::unordered_map<double, double> seen;
-    seen.reserve(count);
-
-    size_t i = 0;
-    while (seen.size() < count) {
-        seen.emplace(dist(rng), static_cast<double>(i++)*1.1);
-    }
-    return {seen.begin(), seen.end()};
-}
 
 DateTime GetNow() {
     return std::chrono::high_resolution_clock::now();

@@ -2,18 +2,20 @@
 #define PERFECTDICTIONARYGETTERS_TPP
 
 template <typename TKey, typename TValue>
-const std::pair<TValue, bool>* PerfectHashDictionary<TKey, TValue>::_findSlot(const TKey &key) const {
-    if (_buckets.size() == 0) return nullptr;
-    const PhBucket<TKey, TValue>& bucket = _buckets[_hash(key, _globalSeed, _tableSize)];
+uint64_t PerfectHashDictionary<TKey, TValue>::_findIndex(const TKey &key) const {
+    auto stdHash = std::hash<TKey>{}(key);
+    const auto& bucket = _buckets[_hashRaw(stdHash, _globalSeed, _tableSize)];
 
-    if (bucket.Values.size() == 0) return nullptr;
-    return &bucket.Values[_hash(key, bucket.Seed, bucket.Values.size())];
+    if (bucket.Size == 0) return -1;
+    __builtin_prefetch(&_values[bucket.Offset], 0, 1);
+    return bucket.Offset + _hashRaw(stdHash, bucket.Seed, bucket.Size);
 }
 
 template <typename TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::ContainsKey(const TKey& key) const {
-    auto* slot = _findSlot(key);
-    return slot && slot->second;
+    auto flatIndex = _findIndex(key);
+    if (flatIndex == -1) return false;
+    return true;
 }
 
 template<typename TKey, typename TValue>
@@ -23,24 +25,29 @@ size_t PerfectHashDictionary<TKey, TValue>::Count() const {
 
 template <typename TKey, typename TValue>
 TValue& PerfectHashDictionary<TKey, TValue>::GetValue(const TKey& key) {
-    auto* slot = const_cast<std::pair<TValue, bool>*>(_findSlot(key));
-    if (slot == nullptr || slot->second == false) throw std::out_of_range("Key not found");
-    return slot->first;
+    return const_cast<TValue&>(
+        static_cast<const PerfectHashDictionary<TKey, TValue>*>(this)->GetValue(key)
+    );
 }
 
 template <typename TKey, typename TValue>
 const TValue& PerfectHashDictionary<TKey, TValue>::GetValue(const TKey& key) const {
-    auto* slot = _findSlot(key);
-    if (slot == nullptr || slot->second == false) throw std::out_of_range("Key not found");
-    return slot->first;
+    auto flatIndex = _findIndex(key);
+    if (flatIndex == -1) throw std::out_of_range("Key not found");
+
+    auto& [value, exists] = _values[flatIndex];
+    if (!exists) throw std::out_of_range("Key not found");
+    return value;
 }
 
 template <typename TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::TryGetValue(const TKey& key, TValue& value) const {
-    auto* slot = _findSlot(key);
-    if (!slot || !slot->second) return false;
+    auto flatIndex = _findIndex(key);
+    if (flatIndex == -1) return false;
 
-    value = slot->first;
+    auto& [dictValue, exists] = _values[flatIndex];
+    if (!exists) return false;
+    value = dictValue;
     return true;
 }
 

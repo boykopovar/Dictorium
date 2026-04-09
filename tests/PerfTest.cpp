@@ -5,11 +5,15 @@
 
 #define DICT_PERF_KEY_TYPE double
 #define DICT_PERF_KEYS 1'000'000
-#define DICT_PERF_KEY_LEN 1000
+#define DICT_PERF_KEY_LEN 10
 #define DICT_PERF_TEST_INIT false
 
-#define DICT_PERF_DATA GenerateDataNum(DICT_PERF_KEYS)
-// #define DICT_PERF_DATA GenerateDataStr(DICT_PERF_KEYS, DICT_PERF_KEY_LEN)
+
+auto GenerateData() {
+    if constexpr (std::is_same_v<DICT_PERF_KEY_TYPE, std::string>)
+        return GenerateDataStr(DICT_PERF_KEYS, DICT_PERF_KEY_LEN);
+    else return GenerateDataNum<DICT_PERF_KEY_TYPE>(DICT_PERF_KEYS);
+}
 
 using namespace dtr;
 
@@ -17,8 +21,7 @@ std::string StlLabel = "unordered_map";
 std::string DictLabel = "PerfectHash";
 
 int main() {
-    auto data = DICT_PERF_DATA;
-
+    auto data = GenerateData();
     std::cout << "Data generating finish\n";
 
     const auto umapInitStart = GetNow();

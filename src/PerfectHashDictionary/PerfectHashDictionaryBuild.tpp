@@ -5,6 +5,8 @@
 template <typename TKey, typename TValue>
 template<PairIterator<TKey, TValue> TIter>
 void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t size) {
+    if (size == 0) throw std::invalid_argument("PerfectHashDictionary cannot be empty");
+
     this->_count = size;
     this->_tableSize = size;
     auto buckets_list = std::vector<std::vector<std::pair<TKey, TValue>>>(_tableSize);
@@ -32,47 +34,53 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
             }
         }
 
-        if (countSqSum <= 2*buckets_list.size()) {
-            this->_buckets = std::vector<PhBucket<TKey, TValue>>(_tableSize);
-            bool needNewGlobalSeed = false;
+        if (countSqSum > 2*buckets_list.size()) continue;
 
-            for (auto& bucket : buckets_list) {
-                if (bucket.size() == 0) continue;
-                auto bucketInnerSize = _nextPrime(bucket.size() * bucket.size());
+        this->_buckets.assign(_tableSize, PhBucket{0, 0, 0});
+        bool needNewGlobalSeed = false;
 
-                auto globalIndex = _hash(bucket[0].first, _globalSeed, _tableSize);
-                auto bucketSeed = _findSeed(bucket, bucketInnerSize);
-                if (bucketSeed == 0) {
-                    needNewGlobalSeed = true;
-                    break;
-                }
+        for (auto& bucket : buckets_list) {
+            if (bucket.empty()) continue;
+            auto bucketInnerSize = _nextPrime(bucket.size() * bucket.size());
 
-                _buckets[globalIndex].Values.resize(bucketInnerSize);
-                _buckets[globalIndex].Seed = bucketSeed;
-
-                for (auto& [key, value] : bucket){
-                    _buckets[globalIndex].Values[_hash(key, bucketSeed, bucketInnerSize)] = {value, true};
-                }
+            auto globalIndex = _hash(bucket[0].first, _globalSeed, _tableSize);
+            auto bucketSeed = _findSeed(bucket, bucketInnerSize);
+            if (bucketSeed == 0) {
+                needNewGlobalSeed = true;
+                break;
             }
 
-            if (needNewGlobalSeed) {
-                _tableSize *= 2;
-                buckets_list.resize(_tableSize);
-                continue;
-            }
-            return;
+            _buckets[globalIndex].Size = bucketInnerSize;
+            _buckets[globalIndex].Seed = bucketSeed;
         }
+
+        if (needNewGlobalSeed) {
+            _tableSize *= 2;
+            buckets_list.resize(_tableSize);
+            continue;
+        }
+
+        size_t flatSize = 0;
+        for (auto& bucket : _buckets) {
+            bucket.Offset = flatSize;
+            flatSize += bucket.Size;
+        }
+        _values.assign(flatSize, {TValue{}, false});
+
+        for (auto& bucket : buckets_list) {
+            if (bucket.empty()) continue;
+            auto globalIndex = _hash(bucket[0].first, _globalSeed, _tableSize);
+            auto& bucketFromFlat = _buckets[globalIndex];
+
+            for (auto& [key, value] : bucket) {
+                size_t flatIndex = bucketFromFlat.Offset + _hash(key, bucketFromFlat.Seed, bucketFromFlat.Size);
+                _values[flatIndex].first = value;
+                _values[flatIndex].second = true;
+            }
+        }
+
+        return;
     }
-}
-
-template<typename TKey, typename TValue>
-size_t PerfectHashDictionary<TKey, TValue>::_hash(const TKey& key, const uint64_t seed, const size_t tableSize) const {
-    auto keyHash = std::hash<TKey>{}(key);
-
-    uint64_t a = seed * PERFECTHASH_SALT + 1;
-    uint64_t b = seed * PERFECTHASH_SALT;
-
-    return (a * keyHash + b) % tableSize;
 }
 
 template<typename TKey, typename TValue>

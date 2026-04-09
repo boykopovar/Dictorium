@@ -14,9 +14,9 @@
 
 namespace dtr{
 
-template <typename TKey, typename TValue>
 struct PhBucket {
-    std::vector<std::pair<TValue, bool>> Values;
+    uint64_t Offset;
+    uint64_t Size;
     uint64_t Seed;
 };
 
@@ -68,18 +68,31 @@ public:
     }
 
 private:
+
+    static inline size_t _fastRange(const uint64_t hash, const size_t count) {
+        return ((__uint128_t)hash * count) >> 64;
+    }
+
+    static inline size_t _hashRaw(const uint64_t stdHash, const uint64_t seed, const size_t tableSize) {
+        return _fastRange((seed * PERFECTHASH_SALT + 1) * stdHash + seed, tableSize);
+    }
+
+    size_t _hash(const TKey& key, const uint64_t seed, const size_t tableSize) const {
+        return _hashRaw(std::hash<TKey>{}(key), seed, tableSize);
+    }
+
     uint64_t _globalSeed;
     uint64_t _count;
     uint64_t _tableSize;
 
-    std::vector<PhBucket<TKey, TValue>> _buckets;
+    std::vector<PhBucket> _buckets;
+    std::vector<std::pair<TValue, bool>> _values;
 
-    size_t _hash(const TKey& key, uint64_t seed, size_t tableSize) const;
     [[nodiscard]] uint64_t _randomNum() const;
     uint64_t _findSeed(const std::vector<std::pair<TKey, TValue>>& bucket, size_t tableSize) const;
     [[nodiscard]] size_t _nextPrime(size_t n) const;
 
-    const std::pair<TValue, bool>* _findSlot(const TKey& key) const;
+    uint64_t _findIndex(const TKey& key) const;
 
     template<PairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);

@@ -10,7 +10,38 @@ using DateTime = std::chrono::time_point<std::chrono::system_clock>;
 
 std::string GenerateStr(std::mt19937& rng, size_t length);
 DataStr GenerateDataStr(size_t count, size_t length);
-std::vector<std::pair<double, double>> GenerateDataNum(size_t count);
+
+template <typename TKey>
+std::vector<std::pair<TKey, double>> GenerateDataNum(const size_t count) {
+    static std::mt19937 rng(std::random_device{}());
+    using limits = std::numeric_limits<TKey>;
+
+    std::vector<std::pair<TKey, double>> result;
+    result.reserve(count);
+
+    if constexpr (std::is_integral_v<TKey>) {
+        const __uint128_t range = static_cast<__uint128_t>(limits::max()) - static_cast<__uint128_t>(limits::lowest()) + 1;
+        if (static_cast<__uint128_t>(count) > range) throw std::invalid_argument("Too many unique keys for this integer type");
+
+        std::vector<TKey> values(count);
+        TKey start = std::numeric_limits<TKey>::lowest();
+
+        for (size_t i = 0; i < count; ++i) {
+            values[i] = static_cast<TKey>(start + i);
+        }
+        std::shuffle(values.begin(), values.end(), rng);
+
+        for (size_t i = 0; i < count; ++i) {
+            result.emplace_back(values[i], i*1.1);
+        }
+    }
+    else {
+        for (size_t i = 0; i < count; ++i) {
+            result.emplace_back(static_cast<TKey>(i), i*1.1);
+        }
+    }
+    return result;
+}
 
 DateTime GetNow();
 size_t DurationNs(DateTime start, DateTime end);
