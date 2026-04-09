@@ -57,6 +57,16 @@ public:
     TValue& GetValue(const TKey& key) override;
     const TValue& GetValue(const TKey& key) const override;
 
+    std::ostream& WriteToStream(std::ostream& os) const override {
+        if constexpr (!StreamWritable<TValue> && ! StreamWritable<TKey>) {
+            return os << "<class 'PerfectHashDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
+        }
+        else {
+            // return this->_writeValues(os, *this);
+            return os << "<class 'PerfectHashDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
+        }
+    }
+
 private:
     uint64_t _globalSeed;
     uint64_t _count;
@@ -68,6 +78,8 @@ private:
     [[nodiscard]] uint64_t _randomNum() const;
     uint64_t _findSeed(const std::vector<std::pair<TKey, TValue>>& bucket, size_t tableSize) const;
     [[nodiscard]] size_t _nextPrime(size_t n) const;
+
+    const std::pair<TValue, bool>* _findSlot(const TKey& key) const;
 
     template<PairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);

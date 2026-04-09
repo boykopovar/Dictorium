@@ -26,5 +26,5 @@ add_executable(PerfHashSpeed
         tests/PerfTest.cpp
         tests/Utils/TestUtils.cpp
 )
-
+target_compile_options(PerfHashSpeed PRIVATE -O2)
 target_link_libraries(PerfHashSpeed Dictorium)

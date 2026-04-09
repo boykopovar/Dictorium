@@ -14,15 +14,10 @@ void PerfectHashDictionary<TKey, TValue>::InsertOrAssign(const TKey& key, const 
 
 template<typename TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::Remove(const TKey &key) {
-    if (_buckets.size() == 0) return false;
-    PhBucket<TKey, TValue>& bucket = _buckets[_hash(key, _globalSeed, _tableSize)];
+    auto* slot = const_cast<std::pair<TValue, bool>*>(_findSlot(key));;
+    if (!slot || !slot->second) return false;
 
-    if (bucket.Values.size() == 0) return false;
-    auto& [value, exists] = bucket.Values[_hash(key, bucket.Seed, bucket.Values.size())];
-
-    if (!exists) return false;
-    exists = false;
-
+    slot->second = false;
     --_count;
     return true;
 }

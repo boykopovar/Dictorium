@@ -3,9 +3,13 @@
 #include "Dictorium/Dictorium.h"
 #include "Utils/TestUtils.h"
 
+#define DICT_PERF_KEY_TYPE double
 #define DICT_PERF_KEYS 1'000'000
-#define DICT_PERF_KEY_LEN 100
+#define DICT_PERF_KEY_LEN 1000
 #define DICT_PERF_TEST_INIT false
+
+#define DICT_PERF_DATA GenerateDataNum(DICT_PERF_KEYS)
+// #define DICT_PERF_DATA GenerateDataStr(DICT_PERF_KEYS, DICT_PERF_KEY_LEN)
 
 using namespace dtr;
 
@@ -13,23 +17,24 @@ std::string StlLabel = "unordered_map";
 std::string DictLabel = "PerfectHash";
 
 int main() {
-    auto data = GenerateDataStr(DICT_PERF_KEYS, DICT_PERF_KEY_LEN);
-    std::cout << "Generate data finish\n";
+    auto data = DICT_PERF_DATA;
+
+    std::cout << "Data generating finish\n";
 
     const auto umapInitStart = GetNow();
-    std::unordered_map<std::string, double> umap(data.begin(), data.end());
+    std::unordered_map<DICT_PERF_KEY_TYPE, double> umap(data.begin(), data.end());
     const auto umapInitTime = DurationNs(umapInitStart, GetNow());
 
     const auto dictInitStart = GetNow();
-    PerfectHashDictionary<std::string, double> dict(data.begin(), data.end());
+    PerfectHashDictionary<DICT_PERF_KEY_TYPE, double> dict(data.begin(), data.end());
     const auto dictInitTime = DurationNs(dictInitStart, GetNow());
 
-    const auto umapFunc = [&](const std::string& key) {
+    const auto umapFunc = [&](const DICT_PERF_KEY_TYPE& key) {
         return umap[key];
     };
 
-    IDictionary<std::string, double>& dictRef = dict;
-    const auto dictFunc = [&](const std::string& key) {
+    IDictionary<DICT_PERF_KEY_TYPE, double>& dictRef = dict;
+    const auto dictFunc = [&](const DICT_PERF_KEY_TYPE& key) {
         return dictRef[key];
     };
 
