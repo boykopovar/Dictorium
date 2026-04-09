@@ -73,9 +73,9 @@ private:
     void _build(TIter begin, TIter end, size_t size);
 };
 
-#include "../../../src/PerfectHashDictionary/PerfectHashDictionaryBuild.tpp"
-#include "../../../src/PerfectHashDictionary/PerfectHashDictionaryGetters.tpp"
-#include "../../../src/PerfectHashDictionary/PerfectHashDictionarySetters.tpp"
+#include "PerfectHashDictionary/PerfectHashDictionaryBuild.tpp"
+#include "PerfectHashDictionary/PerfectHashDictionaryGetters.tpp"
+#include "PerfectHashDictionary/PerfectHashDictionarySetters.tpp"
 
 }
 #endif //PERFECTHASHDICTIONARY_H

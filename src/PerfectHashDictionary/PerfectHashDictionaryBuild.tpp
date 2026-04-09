@@ -21,6 +21,17 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
         for (auto& bucket : buckets_list) {
             countSqSum += bucket.size() * bucket.size();
         }
+
+        for (auto& bucket : buckets_list) {
+            if (bucket.size() <= 1) continue;
+            for (size_t i = 0; i < bucket.size(); ++i) {
+                for (size_t j = i + 1; j < bucket.size(); ++j) {
+                    if (bucket[i].first == bucket[j].first)
+                        throw std::invalid_argument("Duplicate key detected");
+                }
+            }
+        }
+
         if (countSqSum <= 2*buckets_list.size()) {
             this->_buckets = std::vector<PhBucket<TKey, TValue>>(_tableSize);
             bool needNewGlobalSeed = false;

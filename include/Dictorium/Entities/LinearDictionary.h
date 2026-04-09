@@ -127,9 +127,9 @@ private:
     std::vector<std::pair<TKey, TValue>> _dict;
 };
 
-#include "../src/LinearDictionary/LinearDictionary.tpp"
-#include "../src/LinearDictionary/LinearDictionarySetters.tpp"
-#include "../src/LinearDictionary/LinearDictionaryGetters.tpp"
+#include "LinearDictionary/LinearDictionary.tpp"
+#include "LinearDictionary/LinearDictionarySetters.tpp"
+#include "LinearDictionary/LinearDictionaryGetters.tpp"
 
 }
 

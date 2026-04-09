@@ -14,6 +14,7 @@ std::string DictLabel = "PerfectHash";
 
 int main() {
     auto data = GenerateDataStr(DICT_PERF_KEYS, DICT_PERF_KEY_LEN);
+    std::cout << "Generate data finish\n";
 
     const auto umapInitStart = GetNow();
     std::unordered_map<std::string, double> umap(data.begin(), data.end());
