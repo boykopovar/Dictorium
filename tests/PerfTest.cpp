@@ -3,9 +3,9 @@
 #include "Dictorium/Dictorium.h"
 #include "Utils/TestUtils.h"
 
-#define DICT_PERF_KEY_TYPE std::string
-#define DICT_PERF_KEYS 1'000
-#define DICT_PERF_KEY_LEN 10
+#define DICT_PERF_KEY_TYPE int
+#define DICT_PERF_KEYS 1'000'000
+#define DICT_PERF_KEY_LEN 1000
 #define DICT_PERF_TEST_INIT false
 
 
@@ -38,7 +38,7 @@ int main() {
 
     IDictionary<DICT_PERF_KEY_TYPE, double>& dictRef = dict;
     const auto dictFunc = [&](const DICT_PERF_KEY_TYPE& key) {
-        return dict.GetValidatedValue(key);
+        return dict.GetValue(key);
     };
 
     const auto phTime1 = Benchmark(data, dictFunc);

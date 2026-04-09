@@ -1,12 +1,13 @@
 #ifndef PERFECTHASHDICTIONARY_H
 #define PERFECTHASHDICTIONARY_H
 
-#include <list>
 #include <random>
 #include <vector>
 #include <utility>
 #include <stdexcept>
-#include"../Contracts/Concepts.h"
+
+#include"Dictorium/Contracts/Concepts.h"
+#include "PerfectHashDictionary/PerfectHashIterator.tpp"
 
 #define PERFECTHASH_SALT 2654435761ULL
 #define PERFECTHASH_DEPRECATED_POSTFIX "This method of PerfectHashDictionary possibly triggers full hard rebuild. Prefer initializer_list constructor."
@@ -21,6 +22,11 @@ struct PhBucket {
     uint64_t Seed;
 };
 
+template<typename TKey, typename TValue>
+struct PhSlot {
+    std::pair<TKey, TValue> Item;
+    bool Exists;
+};
 
 template<typename TKey, typename TValue>
 class IDictionary;
@@ -28,11 +34,6 @@ class IDictionary;
 template<typename TKey, typename TValue>
 class PerfectHashDictionary : public IDictionary<TKey, TValue> {
 public:
-    struct PhSlot {
-        TKey Key;
-        TValue Value;
-        bool Exists;
-    };
 
     PerfectHashDictionary() = default;
     PerfectHashDictionary(std::initializer_list<std::pair<TKey, TValue>> init) {
@@ -73,10 +74,15 @@ public:
             return os << "<class 'PerfectHashDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
         }
         else {
-            // return this->_writeValues(os, *this);
-            return os << "<class 'PerfectHashDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
+            return this->_writeItems(os, *this);
         }
     }
+
+    PerfectHashIterator<TKey, TValue> begin(){ return {_values, 0}; }
+    PerfectHashIterator<TKey, TValue> end(){ return {_values, _values.size()}; }
+
+    PerfectHashIterator<TKey, TValue> begin() const { return {_values, 0}; }
+    PerfectHashIterator<TKey, TValue> end() const { return {_values, _values.size()}; }
 
 private:
 
@@ -97,7 +103,7 @@ private:
     uint64_t _tableSize;
 
     std::vector<PhBucket> _buckets;
-    std::vector<PhSlot> _values;
+    std::vector<PhSlot<TKey, TValue>> _values;
 
     [[nodiscard]] uint64_t _randomNum() const;
     uint64_t _findSeed(const std::vector<std::pair<TKey, TValue>>& bucket, size_t tableSize) const;
@@ -108,7 +114,7 @@ private:
     template<PairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);
 
-    const PhSlot& _getExistedSlot(const TKey& key) const {
+    const PhSlot<TKey, TValue>& _getExistedSlot(const TKey& key) const {
         auto flatIndex = _findIndex(key);
         if (flatIndex == -1) throw std::out_of_range("Key not found");
 

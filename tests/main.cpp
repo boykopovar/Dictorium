@@ -11,9 +11,10 @@ int main() {
     {"test2", 2},
   };
 
-  std::cout << dict << std::endl;
+
 
   dict.Add("qwe", 123);
+  std::cout << dict << std::endl;
   return 0;
   print(dict.ContainsKey("qwe"));
 

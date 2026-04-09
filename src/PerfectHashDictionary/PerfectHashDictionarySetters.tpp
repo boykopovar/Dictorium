@@ -4,12 +4,25 @@
 
 template <typename TKey, typename TValue>
 void PerfectHashDictionary<TKey, TValue>::Add(const TKey& key, const TValue& value) {
-    throw std::logic_error("Not implemented");
+    std::vector<std::pair<TKey, TValue>> data;
+    data.reserve(_count + 1);
+
+    for (auto& [k, v] : *this) {
+        data.emplace_back(k, v);
+    }
+    data.emplace_back(key, value);
+
+    Clear();
+    _build(data.begin(), data.end(), data.size());
 }
 
 template <typename TKey, typename TValue>
 void PerfectHashDictionary<TKey, TValue>::InsertOrAssign(const TKey& key, const TValue& value) {
-    throw std::logic_error("Not implemented");
+    auto& slot = _values[_findIndex(key)];
+    if (slot.Exists && slot.Item.first == key) slot.Item.second = value;
+    else {
+        Add(key, value);
+    }
 }
 
 template<typename TKey, typename TValue>

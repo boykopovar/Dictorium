@@ -15,7 +15,7 @@ template <typename TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::ContainsKey(const TKey& key) const {
     auto& slot = _getExistedSlot(key);
     if (!slot.Exists) return false;
-    return slot.Key == key;
+    return slot.Item.first == key;
 }
 
 template<typename TKey, typename TValue>
@@ -34,14 +34,14 @@ template <typename TKey, typename TValue>
 const TValue& PerfectHashDictionary<TKey, TValue>::GetValue(const TKey& key) const {
     auto& slot = _getExistedSlot(key);
     if (!slot.Exists) throw std::out_of_range("Key not found");
-    return slot.Value;
+    return slot.Item.second;
 }
 
 template <typename TKey, typename TValue>
 const TValue& PerfectHashDictionary<TKey, TValue>::GetValidatedValue(const TKey& key) const {
     auto& slot = _getExistedSlot(key);
-    if(slot.Key!=key) throw std::out_of_range("Key not found");
-    return slot.Value;
+    if(slot.Item.first!=key) throw std::out_of_range("Key not found");
+    return slot.Item.second;
 }
 
 template <typename TKey, typename TValue>
@@ -55,7 +55,7 @@ template <typename TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::TryGetValue(const TKey& key, TValue& value) const {
     auto& slot = _getExistedSlot(key);
     if (!slot.Exists) return false;
-    value = slot.Value;
+    value = slot.Item.second;
     return true;
 }
 
