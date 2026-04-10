@@ -5,22 +5,29 @@
 
 namespace dtr
 {
-    
+
 template<typename T>
-concept StreamWritable =
+concept CHashable =
+requires(const T& key) {
+    {key == key} -> std::convertible_to<bool>;
+    {std::hash<T>{}(key)} -> std::convertible_to<size_t>;
+};
+
+template<typename T>
+concept CStreamWritable =
 requires(std::ostream& os, T value) {
     os << value;
 };
 
 template<typename T>
-concept SizedIterable = requires(T c) {
+concept CSizedIterable = requires(T c) {
     c.begin();
     c.end();
     c.size();
 };
 
 template <typename TIter, typename TKey, typename TValue>
-concept PairIterator = requires(TIter iter) {
+concept CPairIterator = requires(TIter iter) {
     ++iter;
     *iter;
     iter != iter;
@@ -29,7 +36,7 @@ concept PairIterator = requires(TIter iter) {
 };
 
 template <typename TIter, typename TValue>
-concept ValuesIterator = requires(TIter iter) {
+concept CValuesIterator = requires(TIter iter) {
     ++iter;
     *iter;
     iter != iter;
@@ -37,12 +44,12 @@ concept ValuesIterator = requires(TIter iter) {
 };
 
 template <typename TCollection, typename TKey, typename TValue>
-concept ItemsCollection = requires(const TCollection c) {
+concept CItemsCollection = requires(const TCollection c) {
     c.Items();
 
-    requires SizedIterable<decltype(c.Items())>;
+    requires CSizedIterable<decltype(c.Items())>;
 
-    requires PairIterator<
+    requires CPairIterator<
         decltype(std::begin(c.Items())),
         TKey,
         TValue
@@ -50,16 +57,16 @@ concept ItemsCollection = requires(const TCollection c) {
 };
 
 template <typename TCollection, typename TValue>
-concept ValuesCollection = requires(const TCollection c) {
+concept CValuesCollection = requires(const TCollection c) {
     c.Values();
 
-    requires SizedIterable<decltype(c.Values())>;
+    requires CSizedIterable<decltype(c.Values())>;
 
-    requires ValuesIterator<
+    requires CValuesIterator<
         decltype(std::begin(c.Values())),
         TValue
     >;
 };
-    
+
 }
 #endif //DICTORIUMCONCEPTS_H

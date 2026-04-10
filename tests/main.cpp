@@ -11,11 +11,8 @@ int main() {
     {"test2", 2},
   };
 
-
-
   dict.Add("qwe", 123);
   std::cout << dict << std::endl;
-  return 0;
   print(dict.ContainsKey("qwe"));
 
   std::cout << dict["test1"] << '\n';

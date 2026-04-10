@@ -97,7 +97,7 @@ protected:
     friend class DictProxy<TKey, TValue>;
 
     template<typename TRange>
-    requires PairIterator<decltype(std::begin(std::declval<TRange>())), TKey, TValue>
+    requires CPairIterator<decltype(std::begin(std::declval<TRange>())), TKey, TValue>
     std::ostream& _writeItems(std::ostream& os, const TRange& range) const  {
         bool first = true;
         os << '{' << '\n';
@@ -107,22 +107,22 @@ protected:
             first = false;
             os << "    ";
 
-            if constexpr (StreamWritable<TKey>) os << '"' << key << '"';
+            if constexpr (CStreamWritable<TKey>) os << '"' << key << '"';
             else os << "<TKey=" << typeid(TKey).name() << '>';
 
             os << ": ";
 
             if constexpr (std::is_same_v<TValue, std::string>) os << '"' << value << '"';
-            else if constexpr (StreamWritable<TValue>) os << value;
+            else if constexpr (CStreamWritable<TValue>) os << value;
             else os << "<TValue=" << typeid(value).name() << '>';
         }
         return os << '\n' << '}';
     }
 
     template<typename TRange>
-    requires ValuesIterator<decltype(std::begin(std::declval<TRange>())), TValue>
+    requires CValuesIterator<decltype(std::begin(std::declval<TRange>())), TValue>
     std::ostream& _writeValues(std::ostream& os, const TRange& range) const {
-        if constexpr (!StreamWritable<TValue>) {
+        if constexpr (!CStreamWritable<TValue>) {
             return os << " TValue=" << typeid(TValue).name();
         }
         else {

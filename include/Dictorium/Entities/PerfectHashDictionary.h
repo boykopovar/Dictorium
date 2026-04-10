@@ -31,7 +31,7 @@ struct PhSlot {
 template<typename TKey, typename TValue>
 class IDictionary;
 
-template<typename TKey, typename TValue>
+template<CHashable TKey, typename TValue>
 class PerfectHashDictionary : public IDictionary<TKey, TValue> {
 public:
     PerfectHashDictionary() = delete;
@@ -59,7 +59,7 @@ public:
     /// Выполняет построение идеального хеша.
     /// Сложность: O(n^1.5) с очень большой константой
     /// </summary>
-    template<PairIterator<TKey, TValue> TIter>
+    template<CPairIterator<TKey, TValue> TIter>
     PerfectHashDictionary(TIter begin, TIter end){
         _build(begin, end, std::distance(begin, end));
     }
@@ -74,12 +74,23 @@ public:
 
     /// <summary>
     /// Пытается получить значение по ключу.
+    /// Не выполняет полной проверки совпадения ключа. Ожидается ключ из исходного множества.
     /// Сложность: O(1)
     /// </summary>
     /// <param name="key">Ключ.</param>
     /// <param name="value">Выходное значение.</param>
     /// <returns>true, если ключ найден; иначе false.</returns>
     bool TryGetValue(const TKey& key, TValue& value) const override;
+
+
+    /// <summary>
+    /// Пытается получить значение по ключу c полной проверкой ключа.
+    /// Сложность: O(1)
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <param name="value">Выходное значение.</param>
+    /// <returns>true, если ключ найден; иначе false.</returns>
+    bool TryGetValidatedValue(const TKey& key, TValue& value) const;
 
     /// <summary>
     /// Добавляет элемент в словарь.
@@ -162,7 +173,7 @@ public:
     const TValue& GetValidatedValue(const TKey& key) const;
 
     std::ostream& WriteToStream(std::ostream& os) const override {
-        if constexpr (!StreamWritable<TValue> && ! StreamWritable<TKey>) {
+        if constexpr (!CStreamWritable<TValue> && ! CStreamWritable<TKey>) {
             return os << "<class 'PerfectHashDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
         }
         else {
@@ -203,7 +214,7 @@ private:
 
     uint64_t _findIndex(const TKey& key) const;
 
-    template<PairIterator<TKey, TValue> TIter>
+    template<CPairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);
 
     const PhSlot<TKey, TValue>& _getExistedSlot(const TKey& key) const {

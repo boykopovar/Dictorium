@@ -4,8 +4,8 @@
 #define PERFHASH_MAX_ATTEMPTS 100
 
 
-template <typename TKey, typename TValue>
-template<PairIterator<TKey, TValue> TIter>
+template <CHashable TKey, typename TValue>
+template<CPairIterator<TKey, TValue> TIter>
 void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t size) {
     if (size == 0) throw std::invalid_argument("PerfectHashDictionary cannot be empty");
 
@@ -82,23 +82,21 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
                 _values[flatIndex].Exists = true;
             }
         }
-        std::cout<< "Attempts: " << currentAttempt << '\n';
         return;
     }
     throw std::runtime_error("Failed to build PerfectHash in " + std::to_string(PERFHASH_MAX_ATTEMPTS) + " attempts");
 }
 
-template<typename TKey, typename TValue>
+template<CHashable TKey, typename TValue>
 [[nodiscard]] uint64_t PerfectHashDictionary<TKey, TValue>::_randomNum() const {
     static std::mt19937_64 generator(std::random_device{}());
     return generator();
 }
 
-template<typename TKey, typename TValue>
+template<CHashable TKey, typename TValue>
 uint64_t PerfectHashDictionary<TKey, TValue>::_findSeed(const std::vector<std::pair<TKey, TValue>>& bucket, size_t tableSize) const {
-    constexpr size_t maxAttempts = 1000;
     std::vector<bool> occupied(tableSize, false);
-    for (size_t i = 0; i < maxAttempts; ++i) {
+    for (size_t i = 0; i < PERFHASH_MAX_ATTEMPTS; ++i) {
         std::fill(occupied.begin(), occupied.end(), false);
         auto seed = _randomNum();
         bool collision = false;
@@ -116,7 +114,7 @@ uint64_t PerfectHashDictionary<TKey, TValue>::_findSeed(const std::vector<std::p
     return 0;
 }
 
-template<typename TKey, typename TValue>
+template<CHashable TKey, typename TValue>
 [[nodiscard]] size_t PerfectHashDictionary<TKey, TValue>::_nextPrime(size_t n) const {
     if (n<=2) return 2;
     if (n%2 == 0) ++n;

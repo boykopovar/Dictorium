@@ -115,7 +115,7 @@ public:
     auto end() const { return _dict.end();}
 
     std::ostream& WriteToStream(std::ostream& os) const override {
-        if constexpr (!StreamWritable<TValue> && ! StreamWritable<TKey>) {
+        if constexpr (!CStreamWritable<TValue> && ! CStreamWritable<TKey>) {
             return os << "<class 'LinearDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
         }
         else {

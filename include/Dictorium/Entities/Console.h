@@ -11,7 +11,7 @@ namespace dtr {
 
 template<typename T>
 inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector) {
-    if constexpr (StreamWritable<T>) {
+    if constexpr (CStreamWritable<T>) {
         os << '[';
 
         bool first = true;

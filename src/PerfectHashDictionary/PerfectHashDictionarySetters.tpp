@@ -2,7 +2,7 @@
 #define PERFECTDICTIONARYSETTERS_TPP
 
 
-template <typename TKey, typename TValue>
+template <CHashable TKey, typename TValue>
 void PerfectHashDictionary<TKey, TValue>::Add(const TKey& key, const TValue& value) {
     auto flatIndex = _findIndex(key);
     if (flatIndex != -1) {
@@ -26,7 +26,7 @@ void PerfectHashDictionary<TKey, TValue>::Add(const TKey& key, const TValue& val
     _build(data.begin(), data.end(), data.size());
 }
 
-template <typename TKey, typename TValue>
+template <CHashable TKey, typename TValue>
 void PerfectHashDictionary<TKey, TValue>::InsertOrAssign(const TKey& key, const TValue& value) {
     auto& slot = _values[_findIndex(key)];
     if (slot.Item.first == key) {
@@ -38,7 +38,7 @@ void PerfectHashDictionary<TKey, TValue>::InsertOrAssign(const TKey& key, const 
     }
 }
 
-template<typename TKey, typename TValue>
+template<CHashable TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::Remove(const TKey &key) {
     auto flatIndex = _findIndex(key);
     if (flatIndex == -1) return false;
@@ -50,7 +50,7 @@ bool PerfectHashDictionary<TKey, TValue>::Remove(const TKey &key) {
     return true;
 }
 
-template<typename TKey, typename TValue>
+template<CHashable TKey, typename TValue>
 void PerfectHashDictionary<TKey, TValue>::Clear() {
     _buckets.clear();
     _values.clear();
