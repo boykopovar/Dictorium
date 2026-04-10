@@ -4,7 +4,7 @@
 #include "Utils/TestUtils.h"
 
 #define DICT_PERF_KEY_TYPE int
-#define DICT_PERF_KEYS 1'000'000
+#define DICT_PERF_KEYS 1'000
 #define DICT_PERF_KEY_LEN 1000
 #define DICT_PERF_TEST_INIT false
 

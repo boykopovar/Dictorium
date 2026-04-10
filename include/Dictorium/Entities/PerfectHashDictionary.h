@@ -34,39 +34,131 @@ class IDictionary;
 template<typename TKey, typename TValue>
 class PerfectHashDictionary : public IDictionary<TKey, TValue> {
 public:
+    PerfectHashDictionary() = delete;
 
-    PerfectHashDictionary() = default;
+    /// <summary>
+    /// Создаёт словарь из initializer_list.
+    /// Выполняет построение идеального хеша.
+    /// Сложность: O(n) с очень большой константой
+    /// </summary>
     PerfectHashDictionary(std::initializer_list<std::pair<TKey, TValue>> init) {
         _build(init.begin(), init.end(), init.size());
     }
+
+    /// <summary>
+    /// Создаёт словарь из вектора пар ключ-значение.
+    /// Выполняет построение идеального хеша.
+    /// Сложность: O(n) с очень большой константой
+    /// </summary>
     PerfectHashDictionary(std::vector<std::pair<TKey, TValue>> init){
         _build(init.begin(), init.end(), init.size());
     }
 
+    /// <summary>
+    /// Создаёт словарь из диапазона итераторов.
+    /// Выполняет построение идеального хеша.
+    /// Сложность: O(n) с очень большой константой
+    /// </summary>
     template<PairIterator<TKey, TValue> TIter>
     PerfectHashDictionary(TIter begin, TIter end){
         _build(begin, end, std::distance(begin, end));
     }
 
+    /// <summary>
+    /// Проверяет наличие ключа в словаре.
+    /// Сложность: O(1)
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <returns>true, если ключ существует; иначе false.</returns>
     bool ContainsKey(const TKey& key) const override;
+
+    /// <summary>
+    /// Пытается получить значение по ключу.
+    /// Сложность: O(1)
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <param name="value">Выходное значение.</param>
+    /// <returns>true, если ключ найден; иначе false.</returns>
     bool TryGetValue(const TKey& key, TValue& value) const override;
 
+    /// <summary>
+    /// Добавляет элемент в словарь.
+    /// Приводит к полной перестройке словаря.
+    /// Сложность: O(n) с очень большой константой.
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <param name="value">Значение.</param>
     [[deprecated(PERFECTHASH_DEPRECATED_POSTFIX)]]
     void Add(const TKey& key, const TValue& value) override;
 
+    /// <summary>
+    /// Вставляет элемент или обновляет существующий.
+    /// Может привести к полной перестройке структуры.
+    /// Сложность: O(n) в худшем случае
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <param name="value">Значение.</param>
     [[deprecated(PERFECTHASH_DEPRECATED_POSTFIX)]]
     void InsertOrAssign(const TKey& key, const TValue& value) override;
 
+    /// <summary>
+    /// Логически удаляет элемент (tombstone).
+    /// Элемент не удаляется физически.
+    /// Сложность: O(1)
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <returns>true, если элемент был найден и помечен удалённым.</returns>
     [[deprecated("Lazy removal (tombstone). Element is not phisically removed.")]]
     bool Remove(const TKey& key) override;
 
+    /// <summary>
+    /// Очищает словарь.
+    /// Сложность: O(n)
+    /// </summary>
     void Clear() override;
+
+    /// <summary>
+    /// Возвращает количество элементов.
+    /// Сложность: O(1)
+    /// </summary>
     [[nodiscard]] size_t Count() const override;
 
+    /// <summary>
+    /// Возвращает ссылку на значение по ключу.
+    /// Не выполняет полной проверки совпадения ключа. Ожидается ключ из исходного множества.
+    /// Сложность: O(1)
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <returns>Ссылка на значение.</returns>
+    /// <exception cref="std::out_of_range">Если слот не существует.</exception>
     TValue& GetValue(const TKey& key) override;
+
+    /// <summary>
+    /// Возвращает ссылку на значение по ключу с полной проверкой ключа.
+    /// Сложность: O(1)
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <returns>Ссылка на значение.</returns>
+    /// <exception cref="std::out_of_range">Если ключ не найден.</exception>
     TValue& GetValidatedValue(const TKey& key);
 
+    /// <summary>
+    /// Возвращает ссылку на значение по ключу.
+    /// Не выполняет полной проверки совпадения ключа. Ожидается ключ из исходного множества.
+    /// Сложность: O(1)
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <returns>Ссылка на значение.</returns>
+    /// <exception cref="std::out_of_range">Если слот не существует.</exception>
     const TValue& GetValue(const TKey& key) const override;
+
+    /// <summary>
+    /// Возвращает ссылку на значение по ключу с полной проверкой ключа.
+    /// Сложность: O(1)
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <returns>Ссылка на значение.</returns>
+    /// <exception cref="std::out_of_range">Если ключ не найден.</exception>
     const TValue& GetValidatedValue(const TKey& key) const;
 
     std::ostream& WriteToStream(std::ostream& os) const override {

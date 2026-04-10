@@ -1,6 +1,8 @@
 #ifndef PERFECTDICTIONARY_TPP
 #define PERFECTDICTIONARY_TPP
 
+#define PERFHASH_MAX_ATTEMPTS 100
+
 
 template <typename TKey, typename TValue>
 template<PairIterator<TKey, TValue> TIter>
@@ -11,7 +13,9 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
     this->_tableSize = size;
     auto buckets_list = std::vector<std::vector<std::pair<TKey, TValue>>>(_tableSize);
 
-    while (true) {
+    uint64_t currentAttempt = 0;
+    while (currentAttempt < PERFHASH_MAX_ATTEMPTS) {
+        ++currentAttempt;
         for (auto& bucket : buckets_list) bucket.clear();
         this->_globalSeed = _randomNum();
 
@@ -23,6 +27,7 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
         for (auto& bucket : buckets_list) {
             countSqSum += bucket.size() * bucket.size();
         }
+        if (countSqSum > 2*buckets_list.size()) continue;
 
         for (auto& bucket : buckets_list) {
             if (bucket.size() <= 1) continue;
@@ -33,8 +38,6 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
                 }
             }
         }
-
-        if (countSqSum > 2*buckets_list.size()) continue;
 
         this->_buckets.assign(_tableSize, PhBucket{0, 0, 0});
         bool needNewGlobalSeed = false;
@@ -79,9 +82,10 @@ void PerfectHashDictionary<TKey, TValue>::_build(TIter begin, TIter end, size_t 
                 _values[flatIndex].Exists = true;
             }
         }
-
+        std::cout<< "Attempts: " << currentAttempt << '\n';
         return;
     }
+    throw std::runtime_error("Failed to build PerfectHash in " + std::to_string(PERFHASH_MAX_ATTEMPTS) + " attempts");
 }
 
 template<typename TKey, typename TValue>
