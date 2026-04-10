@@ -4,6 +4,16 @@
 
 template <typename TKey, typename TValue>
 void PerfectHashDictionary<TKey, TValue>::Add(const TKey& key, const TValue& value) {
+    auto flatIndex = _findIndex(key);
+    if (flatIndex != -1) {
+        auto& slot = _values[flatIndex];
+        if (slot.Item.first == key) {
+            slot.Item.second = value;
+            slot.Exists = true;
+            return;
+        }
+    }
+
     std::vector<std::pair<TKey, TValue>> data;
     data.reserve(_count + 1);
 
@@ -19,7 +29,10 @@ void PerfectHashDictionary<TKey, TValue>::Add(const TKey& key, const TValue& val
 template <typename TKey, typename TValue>
 void PerfectHashDictionary<TKey, TValue>::InsertOrAssign(const TKey& key, const TValue& value) {
     auto& slot = _values[_findIndex(key)];
-    if (slot.Exists && slot.Item.first == key) slot.Item.second = value;
+    if (slot.Item.first == key) {
+        slot.Item.second = value;
+        slot.Exists = true;
+    }
     else {
         Add(key, value);
     }
