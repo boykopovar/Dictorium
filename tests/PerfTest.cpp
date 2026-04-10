@@ -3,10 +3,10 @@
 #include "Dictorium/Dictorium.h"
 #include "Utils/TestUtils.h"
 
-#define DICT_PERF_KEY_TYPE std::string
-#define DICT_PERF_KEYS 1'000'000
+#define DICT_PERF_KEY_TYPE int
+#define DICT_PERF_KEYS 1'000
 #define DICT_PERF_KEY_LEN 10
-#define DICT_PERF_TEST_INIT false
+#define DICT_PERF_TEST_INIT true
 
 
 auto GenerateData() {
