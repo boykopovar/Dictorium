@@ -56,7 +56,10 @@ TValue& PerfectHashDictionary<TKey, TValue>::GetValidatedValue(const TKey& key) 
 
 template <CHashable TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::TryGetValue(const TKey& key, TValue& value) const {
-    auto& slot = _getExistedSlot(key);
+    auto flatIndex = _findIndex(key);
+    if (flatIndex == -1) return false;
+
+    auto& slot = _values[flatIndex];
     if (!slot.Exists) return false;
     value = slot.Item.second;
     return true;
@@ -64,8 +67,11 @@ bool PerfectHashDictionary<TKey, TValue>::TryGetValue(const TKey& key, TValue& v
 
 template <CHashable TKey, typename TValue>
 bool PerfectHashDictionary<TKey, TValue>::TryGetValidatedValue(const TKey& key, TValue& value) const {
-    auto& slot = _getExistedSlot(key);
-    if (!slot.Exists || !slot.Item.first == key) return false;
+    auto flatIndex = _findIndex(key);
+    if (flatIndex == -1) return false;
+
+    auto& slot = _values[flatIndex];
+    if (!slot.Exists || !(slot.Item.first == key)) return false;
     value = slot.Item.second;
     return true;
 }

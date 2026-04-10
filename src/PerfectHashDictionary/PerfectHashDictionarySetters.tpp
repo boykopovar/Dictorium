@@ -28,7 +28,12 @@ void PerfectHashDictionary<TKey, TValue>::Add(const TKey& key, const TValue& val
 
 template <CHashable TKey, typename TValue>
 void PerfectHashDictionary<TKey, TValue>::InsertOrAssign(const TKey& key, const TValue& value) {
-    auto& slot = _values[_findIndex(key)];
+    auto flatIndex = _findIndex(key);
+    if (flatIndex != -1) {
+        Add(key, value);
+        return;
+    }
+    auto& slot = _values[flatIndex];
     if (slot.Item.first == key) {
         slot.Item.second = value;
         slot.Exists = true;
