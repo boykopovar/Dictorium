@@ -1,7 +1,7 @@
 #ifndef LINEARDICTIONARYGETTERS_TPP
 #define LINEARDICTIONARYGETTERS_TPP
 
-template <class TKey, class TValue>
+template <typename TKey, typename TValue>
 TValue& LinearDictionary<TKey, TValue>::GetValue(const TKey& key) {
     for (auto& p : _dict) {
         if (p.first == key) return p.second;
@@ -9,7 +9,7 @@ TValue& LinearDictionary<TKey, TValue>::GetValue(const TKey& key) {
     throw std::out_of_range("Key not found");
 }
 
-template <class TKey, class TValue>
+template <typename TKey, typename TValue>
 const TValue& LinearDictionary<TKey, TValue>::GetValue(const TKey& key) const {
     for (auto& p : _dict) {
         if (p.first == key) return p.second;
@@ -17,7 +17,7 @@ const TValue& LinearDictionary<TKey, TValue>::GetValue(const TKey& key) const {
     throw std::out_of_range("Key not found");
 }
 
-template <class TKey, class TValue>
+template <typename TKey, typename TValue>
 bool LinearDictionary<TKey, TValue>::TryGetValue(const TKey& key, TValue& value) const {
     for (auto& p : _dict) {
         if (p.first == key) {

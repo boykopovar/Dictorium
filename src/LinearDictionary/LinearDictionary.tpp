@@ -2,7 +2,7 @@
 #define LINEARDICTIONARY_TPP
 
 
-template <class TKey, class TValue>
+template <typename TKey, typename TValue>
 bool LinearDictionary<TKey, TValue>::ContainsKey(const TKey& key) const {
     for (auto& p : _dict) {
         if (p.first == key) return true;

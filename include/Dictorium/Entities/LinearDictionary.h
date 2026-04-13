@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <stdexcept>
-#include "../Contracts/IEnumerable/LinearEnumerator.h"
 
 namespace dtr{
 
@@ -111,18 +110,26 @@ public:
     /// <returns>Константная ссылка на значение.</returns>
     /// <exception cref="std::out_of_range">Выбрасывается, если ключ не найден.</exception>
     const TValue& GetValue(const TKey& key) const override;
-private:
 
-    std::unique_ptr<IEnumerator<std::pair<TKey, TValue>>> _getItemsEnumerator() const override {
-        return std::make_unique<LinearEnumerator<TKey, TValue>>(_dict);
+    auto begin() const { return _dict.begin();}
+    auto end() const { return _dict.end();}
+
+    std::ostream& WriteToStream(std::ostream& os) const override {
+        if constexpr (!CStreamWritable<TValue> && ! CStreamWritable<TKey>) {
+            return os << "<class 'LinearDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
+        }
+        else {
+            return this->_writeItems(os, *this);
+        }
     }
 
+private:
     std::vector<std::pair<TKey, TValue>> _dict;
 };
 
-#include "../src/LinearDictionary/LinearDictionary.tpp"
-#include "../src/LinearDictionary/LinearDictionarySetters.tpp"
-#include "../src/LinearDictionary/LinearDictionaryGetters.tpp"
+#include "LinearDictionary/LinearDictionary.tpp"
+#include "LinearDictionary/LinearDictionarySetters.tpp"
+#include "LinearDictionary/LinearDictionaryGetters.tpp"
 
 }
 

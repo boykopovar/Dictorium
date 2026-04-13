@@ -9,7 +9,7 @@ namespace dtr {
 class IFormattable {
 public:
     virtual ~IFormattable() = default;
-    virtual void WriteToStream(std::ostream& os) const = 0;
+    virtual std::ostream& WriteToStream(std::ostream& os) const = 0;
 
     virtual std::string ToString() {
         std::string s;

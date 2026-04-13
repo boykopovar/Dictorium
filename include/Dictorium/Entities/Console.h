@@ -5,18 +5,13 @@
 #include <concepts>
 #include <typeinfo>
 #include <vector>
+#include "Dictorium/Contracts/Concepts.h"
 
 namespace dtr {
 
 template<typename T>
-concept StreamWritable =
-requires(std::ostream& os, T value) {
-    os << value;
-};
-
-template<typename T>
 inline std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector) {
-    if constexpr (StreamWritable<T>) {
+    if constexpr (CStreamWritable<T>) {
         os << '[';
 
         bool first = true;
