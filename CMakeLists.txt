@@ -16,12 +16,12 @@ add_library(Dictorium STATIC
 target_include_directories(Dictorium PUBLIC include)
 target_include_directories(Dictorium PUBLIC src)
 
-add_executable(DictoriumRun
+add_executable(DictoriumMain
         tests/main.cpp
         tests/Utils/PrintUtils.cpp
 )
 
-target_link_libraries(DictoriumRun Dictorium)
+target_link_libraries(DictoriumMain Dictorium)
 
 add_executable(PerfHashSpeed
         tests/PerfTest.cpp
