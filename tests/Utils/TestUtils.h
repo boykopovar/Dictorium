@@ -1,6 +1,7 @@
 #ifndef TESTUTILS_H
 #define TESTUTILS_H
 
+#include <stdexcept>
 #include <random>
 #include <string>
 #include <chrono>
