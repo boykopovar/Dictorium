@@ -1,12 +1,13 @@
 #ifndef TESTUTILS_H
 #define TESTUTILS_H
 
+#include <stdexcept>
 #include <random>
 #include <string>
 #include <chrono>
 
 using DataStr = std::vector<std::pair<std::string, double>>;
-using DateTime = std::chrono::time_point<std::chrono::system_clock>;
+using DateTime = std::chrono::time_point<std::chrono::steady_clock>;
 
 std::string GenerateStr(std::mt19937& rng, size_t length);
 DataStr GenerateDataStr(size_t count, size_t length);
@@ -20,8 +21,8 @@ std::vector<std::pair<TKey, double>> GenerateDataNum(const size_t count) {
     result.reserve(count);
 
     if constexpr (std::is_integral_v<TKey>) {
-        const __uint128_t range = static_cast<__uint128_t>(limits::max()) - static_cast<__uint128_t>(limits::lowest()) + 1;
-        if (static_cast<__uint128_t>(count) > range) throw std::invalid_argument("Too many unique keys for this integer type");
+        const size_t range = static_cast<size_t>(limits::max()) - static_cast<size_t>(limits::lowest()) + 1;
+        if (static_cast<size_t>(count) > range) throw std::invalid_argument("Too many unique keys for this integer type");
 
         std::vector<TKey> values(count);
         TKey start = std::numeric_limits<TKey>::lowest();

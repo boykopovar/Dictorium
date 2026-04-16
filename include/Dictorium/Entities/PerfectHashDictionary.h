@@ -14,6 +14,13 @@
 #define PERFECTHASH_DICT_NAME "PerfectHashDictionary"
 #define PERFECTHASH_DEPRECATED_KEYS "Valid only for keys from the original set"
 
+#ifdef _MSC_VER
+    #include <xmmintrin.h>
+    #define PH_PREFETCH(addr) _mm_prefetch(reinterpret_cast<const char*>(addr), _MM_HINT_T0)
+    #else
+    #define PH_PREFETCH(addr) __builtin_prefetch(addr, 0, 1)
+#endif
+
 namespace dtr{
 
 struct PhBucket {
@@ -189,8 +196,14 @@ public:
 
 private:
 
-    static inline size_t _fastRange(const uint64_t hash, const size_t count) {
-        return ((__uint128_t)hash * count) >> 64;
+    static inline uint64_t _fastRange(uint64_t a, uint64_t b) {
+    #ifdef _MSC_VER
+            uint64_t high;
+            _umul128(a, b, &high);
+            return high;
+    #else
+            return static_cast<uint64_t>((static_cast<__uint128_t>(a) * b) >> 64);
+    #endif
     }
 
     static inline size_t _hashRaw(const uint64_t stdHash, const uint64_t seed, const size_t tableSize) {
@@ -227,9 +240,10 @@ private:
     }
 };
 
+}
+
 #include "PerfectHashDictionary/PerfectHashDictionaryBuild.tpp"
 #include "PerfectHashDictionary/PerfectHashDictionaryGetters.tpp"
 #include "PerfectHashDictionary/PerfectHashDictionarySetters.tpp"
 
-}
 #endif //PERFECTHASHDICTIONARY_H
