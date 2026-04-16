@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(Dictorium)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(DICTORIUM_SOURCES
        src/dtr.cpp
@@ -26,5 +27,4 @@ add_executable(PerfHashSpeed
         tests/PerfTest.cpp
         tests/Utils/TestUtils.cpp
 )
-target_compile_options(PerfHashSpeed PRIVATE -O2)
 target_link_libraries(PerfHashSpeed Dictorium)

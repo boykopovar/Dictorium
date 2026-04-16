@@ -3,6 +3,8 @@
 
 #define PERFHASH_MAX_ATTEMPTS 100
 
+namespace  dtr
+{
 
 template <CHashable TKey, typename TValue>
 template<CPairIterator<TKey, TValue> TIter>
@@ -132,6 +134,6 @@ template<CHashable TKey, typename TValue>
     }
 }
 
-
+}
 
 #endif // PERFECTDICTIONARY_TPP

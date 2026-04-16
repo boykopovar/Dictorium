@@ -1,6 +1,8 @@
 #ifndef PERFECTDICTIONARYSETTERS_TPP
 #define PERFECTDICTIONARYSETTERS_TPP
 
+namespace  dtr
+{
 
 template <CHashable TKey, typename TValue>
 void PerfectHashDictionary<TKey, TValue>::Add(const TKey& key, const TValue& value) {
@@ -64,5 +66,5 @@ void PerfectHashDictionary<TKey, TValue>::Clear() {
     _tableSize = 0;
 }
 
-
+}
 #endif // PERFECTDICTIONARYSETTERS_TPP

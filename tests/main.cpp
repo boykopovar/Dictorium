@@ -13,7 +13,7 @@ int main() {
 
   dict.Add("qwe", 123);
   std::cout << dict << std::endl;
-  print(dict.ContainsKey("qwe"));
+  std::cout << dict.ContainsKey("qwe");
 
   std::cout << dict["test1"] << '\n';
   std::cout << dict.Count() << '\n';
