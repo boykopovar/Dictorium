@@ -28,3 +28,10 @@ add_executable(PerfHashSpeed
         tests/Utils/TestUtils.cpp
 )
 target_link_libraries(PerfHashSpeed Dictorium)
+
+add_executable(ChainingHashSpeed
+        tests/ChainingTest.cpp
+        tests/Utils/TestUtils.cpp
+)
+
+target_link_libraries(ChainingHashSpeed Dictorium)
