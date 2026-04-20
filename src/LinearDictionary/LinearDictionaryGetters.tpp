@@ -1,6 +1,9 @@
 #ifndef LINEARDICTIONARYGETTERS_TPP
 #define LINEARDICTIONARYGETTERS_TPP
 
+namespace dtr
+{
+
 template <typename TKey, typename TValue>
 TValue& LinearDictionary<TKey, TValue>::GetValue(const TKey& key) {
     for (auto& p : _dict) {
@@ -28,4 +31,5 @@ bool LinearDictionary<TKey, TValue>::TryGetValue(const TKey& key, TValue& value)
     return false;
 }
 
+}
 #endif //LINEARDICTIONARYGETTERS_TPP

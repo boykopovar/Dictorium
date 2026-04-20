@@ -33,7 +33,7 @@ DataStr GenerateDataStr(const size_t count, const size_t length) {
 
 
 DateTime GetNow() {
-    return std::chrono::high_resolution_clock::now();
+    return std::chrono::steady_clock::now();
 }
 
 size_t DurationNs(const DateTime start, const DateTime end) {

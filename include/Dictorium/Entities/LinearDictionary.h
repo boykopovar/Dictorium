@@ -127,10 +127,11 @@ private:
     std::vector<std::pair<TKey, TValue>> _dict;
 };
 
+
+}
+
 #include "LinearDictionary/LinearDictionary.tpp"
 #include "LinearDictionary/LinearDictionarySetters.tpp"
 #include "LinearDictionary/LinearDictionaryGetters.tpp"
-
-}
 
 #endif //LINEARDICTIONARY_H

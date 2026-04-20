@@ -1,13 +1,16 @@
 #ifndef PERFECTDICTIONARYGETTERS_TPP
 #define PERFECTDICTIONARYGETTERS_TPP
 
+namespace dtr
+{
+
 template <CHashable TKey, typename TValue>
 uint64_t PerfectHashDictionary<TKey, TValue>::_findIndex(const TKey &key) const {
     auto stdHash = std::hash<TKey>{}(key);
     const auto& bucket = _buckets[_hashRaw(stdHash, _globalSeed, _tableSize)];
 
     if (bucket.Size == 0) return -1;
-    __builtin_prefetch(&_values[bucket.Offset], 0, 1);
+    PH_PREFETCH(&_values[bucket.Offset]);
     return bucket.Offset + _hashRaw(stdHash, bucket.Seed, bucket.Size);
 }
 
@@ -76,4 +79,5 @@ bool PerfectHashDictionary<TKey, TValue>::TryGetValidatedValue(const TKey& key, 
     return true;
 }
 
+}
 #endif // PERFECTDICTIONARYGETTERS_TPP

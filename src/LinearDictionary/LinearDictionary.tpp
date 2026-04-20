@@ -1,6 +1,8 @@
 #ifndef LINEARDICTIONARY_TPP
 #define LINEARDICTIONARY_TPP
 
+namespace dtr
+{
 
 template <typename TKey, typename TValue>
 bool LinearDictionary<TKey, TValue>::ContainsKey(const TKey& key) const {
@@ -32,6 +34,5 @@ size_t LinearDictionary<TKey, TValue>::Count() const {
     return _dict.size();
 }
 
-
-
+}
 #endif // LINEARDICTIONARY_TPP
