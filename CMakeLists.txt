@@ -28,3 +28,13 @@ add_executable(PerfHashSpeed
         tests/Utils/TestUtils.cpp
 )
 target_link_libraries(PerfHashSpeed Dictorium)
+add_executable(AvlTest
+        tests/AvlTest.cpp
+)
+target_link_libraries(AvlTest Dictorium)
+
+add_executable(AvlPerfTest
+        tests/AvlPerfTest.cpp
+        tests/Utils/TestUtils.cpp
+)
+target_link_libraries(AvlPerfTest Dictorium)
