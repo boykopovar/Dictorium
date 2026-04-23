@@ -8,6 +8,9 @@
 #define DICT_PERF_KEY_LEN 10
 #define DICT_PERF_TEST_INIT true
 
+#define DTR_TEST_TYPE PerfectHashDictionary
+#define STL_TEST_TYPE std::unordered_map
+
 
 auto GenerateData() {
     if constexpr (std::is_same_v<DICT_PERF_KEY_TYPE, std::string>)
@@ -17,19 +20,19 @@ auto GenerateData() {
 
 using namespace dtr;
 
-std::string StlLabel = "unordered_map";
-std::string DictLabel = "PerfectHash";
+std::string StlLabel = DTR_STR(STL_TEST_TYPE);
+std::string DictLabel = DTR_STR(DTR_TEST_TYPE);
 
 int main() {
     auto data = GenerateData();
     std::cout << "Data generating finish\n";
 
     const auto umapInitStart = GetNow();
-    std::unordered_map<DICT_PERF_KEY_TYPE, double> umap(data.begin(), data.end());
+    STL_TEST_TYPE<DICT_PERF_KEY_TYPE, double> umap(data.begin(), data.end());
     const auto umapInitTime = DurationNs(umapInitStart, GetNow());
 
     const auto dictInitStart = GetNow();
-    PerfectHashDictionary<DICT_PERF_KEY_TYPE, double> dict(data.begin(), data.end());
+    DTR_TEST_TYPE<DICT_PERF_KEY_TYPE, double> dict(data.begin(), data.end());
     const auto dictInitTime = DurationNs(dictInitStart, GetNow());
 
     const auto umapFunc = [&](const DICT_PERF_KEY_TYPE& key) {

@@ -1,6 +1,9 @@
 #ifndef TESTUTILS_H
 #define TESTUTILS_H
 
+#define DTR_HASHTAG(x) #x
+#define DTR_STR(x) DTR_HASHTAG(x)
+
 #include <stdexcept>
 #include <random>
 #include <string>
