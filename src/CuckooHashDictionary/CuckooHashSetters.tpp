@@ -5,6 +5,10 @@ namespace dtr {
 
 template<CHashable TKey, typename TValue>
 void CuckooHashDictionary<TKey, TValue>::Add(const TKey &key, const TValue &value) {
+    if (_table1.size() == 0) {
+        _table1.assign(DTR_CUCKOO_INIT_CAPACITY, {});
+        _table2.assign(DTR_CUCKOO_INIT_CAPACITY, {});
+    }
     throw std::runtime_error("Not implemented");
 }
 
@@ -30,7 +34,6 @@ bool CuckooHashDictionary<TKey, TValue>::Remove(const TKey &key) {
 template<CHashable TKey, typename TValue>
 void CuckooHashDictionary<TKey, TValue>::Clear() {
     _keysCount = 0;
-    _rehashCount = 0;
 
     _seed1 = DTR_CUCKOO_SEED1;
     _seed2 = DTR_CUCKOO_SEED2;

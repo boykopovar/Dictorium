@@ -2,7 +2,8 @@
 #define CUCKOOHASHDICTIONARY_H
 
 #define DTR_CUCKOO_MAX_LOAD_FACTOR 0.5
-#define DTR_CUCKOO_INIT_CAPACITY 8
+#define DTR_CUCKOO_INIT_CAPACITY static_cast<size_t>(8)
+#define DTR_CUCKOO_KICKS_FACTOR 2.0
 
 #define DTR_CUCKOO_SEED1 0x9e3779b97f4a7c15ULL
 #define DTR_CUCKOO_SEED2 0x6c62272e07bb0142ULL
@@ -58,7 +59,6 @@ public:
     }
 
 private:
-    size_t _rehashCount = 0;
     size_t _keysCount = 0;
 
     size_t _maxLoadFactor = DTR_CUCKOO_MAX_LOAD_FACTOR;
@@ -68,7 +68,8 @@ private:
     template<CPairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);
 
-    void _rehash();
+    void Rehash();
+    void Rehash(size_t newTableSize);
 
     [[nodiscard]] size_t _hash1(const uint64_t stdHash, const size_t tableSize) const {
         return FastRange(stdHash * _seed1, tableSize);
@@ -77,6 +78,11 @@ private:
     [[nodiscard]] size_t _hash2(const uint64_t stdHash, const size_t tableSize) const {
         const uint64_t hash = (stdHash ^ (stdHash >> 30)) * _seed2;
         return FastRange(hash, tableSize);
+    }
+
+    inline size_t _getMaxKicks() {
+        if (_table1.size() == 0) return 0;
+        return static_cast<size_t>(DTR_CUCKOO_KICKS_FACTOR * std::log2(_table1.size()));
     }
 
     std::vector<DictSlot<TKey, TValue>> _table1;
