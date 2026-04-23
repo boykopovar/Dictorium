@@ -24,12 +24,6 @@ struct PhBucket {
 };
 
 template<typename TKey, typename TValue>
-struct PhSlot {
-    std::pair<TKey, TValue> Item;
-    bool Exists;
-};
-
-template<typename TKey, typename TValue>
 class IDictionary;
 
 template<CHashable TKey, typename TValue>
@@ -205,7 +199,7 @@ private:
     uint64_t _tableSize;
 
     std::vector<PhBucket> _buckets;
-    std::vector<PhSlot<TKey, TValue>> _values;
+    std::vector<DictSlot<TKey, TValue>> _values;
 
     [[nodiscard]] uint64_t _randomNum() const;
     uint64_t _findSeed(const std::vector<std::pair<TKey, TValue>>& bucket, size_t tableSize) const;
@@ -216,7 +210,7 @@ private:
     template<CPairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);
 
-    const PhSlot<TKey, TValue>& _getExistedSlot(const TKey& key) const {
+    const DictSlot<TKey, TValue>& _getExistedSlot(const TKey& key) const {
         auto flatIndex = _findIndex(key);
         if (flatIndex == -1) throw std::out_of_range("Key not found");
 

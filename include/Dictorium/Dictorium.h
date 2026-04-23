@@ -2,6 +2,7 @@
 #define DICTORIUM_H
 
 #include <cstdint>
+#include <utility>
 
 #ifdef _MSC_VER
     #include <xmmintrin.h>
@@ -11,16 +12,24 @@
 #endif
 
 namespace dtr {
-    static inline uint64_t FastRange(uint64_t a, uint64_t b) {
+
+template<typename TKey, typename TValue>
+struct DictSlot {
+    std::pair<TKey, TValue> Item;
+    bool Exists;
+};
+
+static inline uint64_t FastRange(uint64_t a, uint64_t b) {
 #ifdef _MSC_VER
-        uint64_t high;
-        _umul128(a, b, &high);
-        return high;
+    uint64_t high;
+    _umul128(a, b, &high);
+    return high;
 #else
-        return static_cast<uint64_t>((static_cast<__uint128_t>(a) * b) >> 64);
+    return static_cast<uint64_t>((static_cast<__uint128_t>(a) * b) >> 64);
 #endif
-    }
 }
+}
+
 
 #include "Contracts/Contracts.h"
 #include "Entities/LinearDictionary.h"

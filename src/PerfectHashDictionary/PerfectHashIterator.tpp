@@ -3,12 +3,12 @@
 namespace dtr{
 
 template<typename TKey, typename TValue>
-struct PhSlot;
+struct DictSlot;
 
 template<typename TKey, typename TValue>
 class PerfectHashIterator {
 public:
-    PerfectHashIterator(const std::vector<PhSlot<TKey, TValue>>& slots, size_t index)
+    PerfectHashIterator(const std::vector<DictSlot<TKey, TValue>>& slots, size_t index)
         : _slots(&slots), _index(index) { _skipDead(); }
 
     const std::pair<TKey, TValue>& operator*() const {
@@ -29,7 +29,7 @@ public:
     bool operator!=(const PerfectHashIterator& other) const {return _index != other._index;}
 
 private:
-    const std::vector<PhSlot<TKey, TValue>>* _slots;
+    const std::vector<DictSlot<TKey, TValue>>* _slots;
     size_t _index;
 
     void _skipDead(){

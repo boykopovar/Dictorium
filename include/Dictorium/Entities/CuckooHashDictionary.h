@@ -2,6 +2,8 @@
 #define CUCKOOHASHDICTIONARY_H
 
 #define DTR_CUCKOO_MAX_LOAD_FACTOR 0.5
+#define DTR_CUCKOO_SALT1 0x9e3779b97f4a7c15ULL
+#define DTR_CUCKOO_SALT2 0x6c62272e07bb0142ULL
 
 #include <vector>
 #include <stdexcept>
@@ -57,6 +59,15 @@ private:
 
     template<CPairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);
+
+    size_t _hash1(const uint64_t stdHash, const size_t tableSize) {
+        return FastRange(stdHash * DTR_CUCKOO_SALT1, tableSize);
+    }
+
+    size_t _hash2(const uint64_t stdHash, const size_t tableSize) {
+        const uint64_t hash = (stdHash ^ (stdHash >> 30)) * DTR_CUCKOO_SALT2;
+        return FastRange(hash, tableSize);
+    }
 };
 
 
