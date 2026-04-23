@@ -2,8 +2,13 @@
 #define CUCKOOHASHDICTIONARY_H
 
 #define DTR_CUCKOO_MAX_LOAD_FACTOR 0.5
-#define DTR_CUCKOO_SALT1 0x9e3779b97f4a7c15ULL
-#define DTR_CUCKOO_SALT2 0x6c62272e07bb0142ULL
+#define DTR_CUCKOO_INIT_CAPACITY 8
+
+#define DTR_CUCKOO_SEED1 0x9e3779b97f4a7c15ULL
+#define DTR_CUCKOO_SEED2 0x6c62272e07bb0142ULL
+
+#define DTR_CUCKOO_REHASH_SALT1 0xbf58476d1ce4e5b9ULL
+#define DTR_CUCKOO_REHASH_SALT2 0x94d049bb133111ebULL
 
 #include <vector>
 #include <stdexcept>
@@ -55,19 +60,27 @@ public:
 private:
     size_t _rehashCount = 0;
     size_t _keysCount = 0;
+
     size_t _maxLoadFactor = DTR_CUCKOO_MAX_LOAD_FACTOR;
+    uint64_t _seed1 = DTR_CUCKOO_SEED1;
+    uint64_t _seed2 = DTR_CUCKOO_SEED2;
 
     template<CPairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);
 
-    size_t _hash1(const uint64_t stdHash, const size_t tableSize) {
-        return FastRange(stdHash * DTR_CUCKOO_SALT1, tableSize);
+    void _rehash();
+
+    [[nodiscard]] size_t _hash1(const uint64_t stdHash, const size_t tableSize) const {
+        return FastRange(stdHash * _seed1, tableSize);
     }
 
-    size_t _hash2(const uint64_t stdHash, const size_t tableSize) {
-        const uint64_t hash = (stdHash ^ (stdHash >> 30)) * DTR_CUCKOO_SALT2;
+    [[nodiscard]] size_t _hash2(const uint64_t stdHash, const size_t tableSize) const {
+        const uint64_t hash = (stdHash ^ (stdHash >> 30)) * _seed2;
         return FastRange(hash, tableSize);
     }
+
+    std::vector<DictSlot<TKey, TValue>> _table1;
+    std::vector<DictSlot<TKey, TValue>> _table2;
 };
 
 

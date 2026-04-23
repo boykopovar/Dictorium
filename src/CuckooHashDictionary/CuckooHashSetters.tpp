@@ -15,12 +15,28 @@ void CuckooHashDictionary<TKey, TValue>::InsertOrAssign(const TKey &key, const T
 
 template<CHashable TKey, typename TValue>
 bool CuckooHashDictionary<TKey, TValue>::Remove(const TKey &key) {
-    throw std::runtime_error("Not implemented");
+    const uint64_t stdHash = std::hash<TKey>{}(key);
+    const auto size = _table1.size();
+
+    auto& slot1 = _table1[_hash1(stdHash, size)];
+    if (slot1.Exists && slot1.Item.first == key) slot1.Exists = false;
+
+    auto& slot2 = _table2[_hash2(stdHash, size)];
+    if (slot2.Exists && slot2.Item.first == key) slot2.Exists = false;
+
+    throw std::out_of_range("Key not found");
 }
 
 template<CHashable TKey, typename TValue>
 void CuckooHashDictionary<TKey, TValue>::Clear() {
-    throw std::runtime_error("Not implemented");
+    _keysCount = 0;
+    _rehashCount = 0;
+
+    _seed1 = DTR_CUCKOO_SEED1;
+    _seed2 = DTR_CUCKOO_SEED2;
+
+    _table1.clear();
+    _table2.clear();
 }
 
 }
