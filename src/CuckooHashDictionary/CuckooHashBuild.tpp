@@ -26,6 +26,14 @@ void CuckooHashDictionary<TKey, TValue>::Rehash(size_t newTableSize) {
     _seed1 = (_seed1 ^ (_seed1 >> 30)) * DTR_CUCKOO_REHASH_SALT1;
     _seed2 = (_seed2 ^ (_seed2 >> 27)) * DTR_CUCKOO_REHASH_SALT2;
 }
+
+/*
+template <CHashable TKey, typename TValue>
+void CuckooHashDictionary<TKey, TValue>::_insert(size_t newTableSize) {
+    _seed1 = (_seed1 ^ (_seed1 >> 30)) * DTR_CUCKOO_REHASH_SALT1;
+    _seed2 = (_seed2 ^ (_seed2 >> 27)) * DTR_CUCKOO_REHASH_SALT2;
+}
+*/
     
 }
 

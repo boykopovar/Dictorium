@@ -34,7 +34,12 @@ public:
 
     bool TryGetValue(const TKey& key, TValue& value) const override;
 
-    void Add(const TKey& key, const TValue& value) override;
+    void Add(const TKey& key, const TValue& value) override {
+        if (_table1.size() == 0) {
+            _table1.assign(DTR_CUCKOO_INIT_CAPACITY, {});
+            _table2.assign(DTR_CUCKOO_INIT_CAPACITY, {});
+        }
+    }
 
     void InsertOrAssign(const TKey& key, const TValue& value) override;
 
@@ -67,6 +72,32 @@ private:
 
     template<CPairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);
+
+    bool _insert(TKey key, TValue value, const bool allowOverwrite) {
+        const auto maxKicks = _getMaxKicks();
+        const auto size = _table1.size();
+
+        for (size_t i = 0; i < maxKicks; ++i) {
+            const uint64_t stdHash = std::hash<TKey>{}(key);
+            auto& slot1 = _table1[_hash1(stdHash, size)];
+
+            if (slot1.Exists && slot1.Item.first == key) {
+                if (allowOverwrite) {
+                    slot1.Item.first = key;
+                    slot1.Item.second = value;
+                    slot1.Exists = true;
+                    return true;
+                }
+                throw std::runtime_error("Key already exists");
+            }
+            else if (!slot1.Exists) {
+                slot1.Item.first = key;
+                slot1.Item.second = value;
+                slot1.Exists = true;
+            }
+
+        }
+    }
 
     void Rehash();
     void Rehash(size_t newTableSize);

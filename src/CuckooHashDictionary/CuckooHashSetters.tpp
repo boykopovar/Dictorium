@@ -3,14 +3,14 @@
 
 namespace dtr {
 
-template<CHashable TKey, typename TValue>
-void CuckooHashDictionary<TKey, TValue>::Add(const TKey &key, const TValue &value) {
-    if (_table1.size() == 0) {
-        _table1.assign(DTR_CUCKOO_INIT_CAPACITY, {});
-        _table2.assign(DTR_CUCKOO_INIT_CAPACITY, {});
-    }
-    throw std::runtime_error("Not implemented");
-}
+// template<CHashable TKey, typename TValue>
+// void CuckooHashDictionary<TKey, TValue>::Add(const TKey &key, const TValue &value) {
+//     if (_table1.size() == 0) {
+//         _table1.assign(DTR_CUCKOO_INIT_CAPACITY, {});
+//         _table2.assign(DTR_CUCKOO_INIT_CAPACITY, {});
+//     }
+//     throw std::runtime_error("Not implemented");
+// }
 
 template<CHashable TKey, typename TValue>
 void CuckooHashDictionary<TKey, TValue>::InsertOrAssign(const TKey &key, const TValue &value) {
