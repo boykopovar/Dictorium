@@ -43,7 +43,7 @@ public:
         if (node == 0){
             return false;
         } else{
-            node->data.second = value;
+            value = node->data.second;
         }
         return true;
     };
@@ -65,7 +65,7 @@ public:
         }
     };
     bool Remove(const TKey& key) override{
-        auto removeNode = _remove(_root, _initNode(key, nullptr));
+        auto removeNode = _remove(_root, key);
         if (removeNode == 0){
             return false;
         } else{
@@ -82,16 +82,37 @@ public:
         return _count;
     };
     TValue& GetValue(const TKey& key) override{
-        return _find(_root, key)->data.second;
+        auto node = _find(_root, key);
+        if (node == 0){
+            throw std::out_of_range("Key not found");
+        }
+        return node->data.second;
     };
     const TValue& GetValue(const TKey& key) const override{
         return _find(_root, key)->data.second;
     };
     std::vector<std::pair<TKey, TValue>> LowerBound(const TKey& key) override;
     std::vector<std::pair<TKey, TValue>> UpperBound(const TKey& key) override;
-    [[nodiscard]] virtual unsigned char Height()
-    {
+    [[nodiscard]] unsigned char Height() const override{
         return _root? _root->height : 0;
+    };
+protected:
+
+    Node* RotationRight(Node* node) override{
+        Node* newNode = node->left;
+        node->left = newNode->right;
+        newNode->right = node;
+        _fixHeight(node);
+        _fixHeight(newNode);
+        return newNode;
+    };
+    Node* RotationLeft(Node* node) override{
+        Node* newNode = node->right;
+        node->right = newNode->left;
+        newNode->left = node;
+        _fixHeight(node);
+        _fixHeight(newNode);
+        return newNode;
     };
 
 private:
@@ -143,12 +164,12 @@ private:
         return _balance(node);
     }
 
-    Node* _remove(Node* node, Node* removeNode){
+    Node* _remove(Node* node, TKey key){
         if (!node) return 0;
-        if (node->data.first > removeNode->data.first){
-            node->left = _remove(node->left, removeNode);
-        } else if (node->data.first < removeNode->data.first){
-            node->right = _remove(node->right, removeNode);
+        if (node->data.first > key){
+            node->left = _remove(node->left, key);
+        } else if (node->data.first < key){
+            node->right = _remove(node->right, key);
         } else {
             auto leftSubtree = node->left;
             auto rightSubtree = node->right;
@@ -176,35 +197,19 @@ private:
 
     Node* _root = nullptr;
     unsigned int _count = 0;
-    Node* _rotationRight(Node* node) override{
-        Node* newNode = node->left;
-        node->left = newNode->right;
-        newNode->right = node;
-        _fixHeight(node);
-        _fixHeight(newNode);
-        return newNode;
-    };
-    Node* _rotationLeft(Node* node) override{
-        Node* newNode = node->right;
-        node->right = newNode->left;
-        newNode->left = node;
-        _fixHeight(node);
-        _fixHeight(newNode);
-        return newNode;
-    };
     Node* _balance(Node* node){
         _fixHeight(node);
         if (_balanceFactor(node) == 2) {
             if (_balanceFactor(node->left) < 0){
-                node->left = _rotationLeft(node->left);
+                node->left = RotationLeft(node->left);
             }
-            return _rotationRight(node);
+            return RotationRight(node);
         }
         if (_balanceFactor(node) == -2){
             if (_balanceFactor(node->right) > 0){
-                node->right = _rotationRight(node->right);
+                node->right = RotationRight(node->right);
             }
-            return _rotationLeft(node);
+            return RotationLeft(node);
         }
         return node;
     }
