@@ -10,11 +10,11 @@ namespace detail {
     template<typename TKey, typename TValue>
     struct Node {
         std::pair<TKey, TValue> data;
-        Node* left;
-        Node* right;
+        Node *left;
+        Node *right;
         unsigned char height;
     };
-
+}
 
 
 template<typename TKey, typename TValue>
@@ -24,10 +24,11 @@ template<typename TKey, typename TValue, typename TNode>
 class IBalancedTreeDictionary;
 
 template<typename TKey, typename TValue>
-class AvlDictionary : public IDictionary<TKey, TValue>, IBalancedTreeDictionary<TKey, TValue, dtr::detail::Node<TKey, TValue>> {
+class AvlDictionary : public IDictionary<TKey, TValue>, IBalancedTreeDictionary<TKey, TValue, detail::Node<TKey, TValue>> {
 
 public:
 
+    using Node = detail::Node<TKey, TValue>;
     bool ContainsKey(const TKey& key) const override
     {
         auto node = _find(_root, key);
@@ -95,32 +96,32 @@ public:
 
 private:
 
-    void _clear(Node<TKey,TValue>* node){
+    void _clear(Node* node){
         if (!node) return;
         _clear(node->left);
         _clear(node->right);
         delete node;
     }
-    Node<TKey,TValue>* _initNode(TKey key, TValue value){
-        return new Node<TKey,TValue>{
+    Node* _initNode(TKey key, TValue value){
+        return new Node{
                 {key, value},
                 nullptr,
                 nullptr,
                 1
         };
     }
-    Node<TKey,TValue>* _find (Node<TKey,TValue>* node, TKey key){
+    Node* _find (Node* node, TKey key){
         if (!node) return 0;
         if (node->data.first > key){
-            return _find(node->left);
+            return _find(node->left, key);
         } else if (node->data.first < key){
-            return _find(node->right);
+            return _find(node->right, key);
         } else{
             return node;
         }
         return 0;
     }
-    Node<TKey,TValue>* _insert(Node<TKey,TValue>* node, Node<TKey,TValue>* newNode){
+    Node* _insert(Node* node, Node* newNode){
         if (!node)
             return newNode;
         if (node->data.first > newNode->data.first)
@@ -130,11 +131,11 @@ private:
         return _balance(node);
     };
 
-    Node<TKey,TValue>* _findMin(Node<TKey,TValue>* node){
+    Node* _findMin(Node* node){
         return node->left? _findMin(node->left):node;
     }
 
-    Node<TKey,TValue>* _removeMin(Node<TKey,TValue>* node){
+    Node* _removeMin(Node* node){
         if (node->left == 0){
             return node->right;
         }
@@ -142,7 +143,7 @@ private:
         return _balance(node);
     }
 
-    Node<TKey,TValue>* _remove(Node<TKey,TValue>* node, Node<TKey,TValue>* removeNode){
+    Node* _remove(Node* node, Node* removeNode){
         if (!node) return 0;
         if (node->data.first > removeNode->data.first){
             node->left = _remove(node->left, removeNode);
@@ -160,38 +161,38 @@ private:
         }
         return _balance(node);
     }
-    unsigned char _height(Node<TKey, TValue>* node){
+    unsigned char _height(Node* node){
         return node ? node->height : 0;
     }
 
-    unsigned char _balanceFactor(Node<TKey, TValue>* node){
+    unsigned char _balanceFactor(Node* node){
         return _height(node->left) - _height(node->right);
     }
-    void _fixHeight(Node<TKey, TValue>* node){
+    void _fixHeight(Node* node){
         unsigned char heightLeft = _height(node->left);
         unsigned char heightRight = _height(node->right);
         node->height = ((heightLeft > heightRight) ? heightLeft : heightRight) + 1;
     }
 
-    Node<TKey,TValue>* _root = nullptr;
+    Node* _root = nullptr;
     unsigned int _count = 0;
-    Node<TKey, TValue>* _rotationRight(Node<TKey, TValue>* node) override{
-        Node<TKey, TValue>* newNode = node->left;
+    Node* _rotationRight(Node* node) override{
+        Node* newNode = node->left;
         node->left = newNode->right;
         newNode->right = node;
         _fixHeight(node);
         _fixHeight(newNode);
         return newNode;
     };
-    Node<TKey, TValue>* _rotationLeft(Node<TKey, TValue>* node) override{
-        Node<TKey, TValue>* newNode = node->right;
+    Node* _rotationLeft(Node* node) override{
+        Node* newNode = node->right;
         node->right = newNode->left;
         newNode->left = node;
         _fixHeight(node);
         _fixHeight(newNode);
         return newNode;
     };
-    Node<TKey, TValue>* _balance(Node<TKey, TValue>* node){
+    Node* _balance(Node* node){
         _fixHeight(node);
         if (_balanceFactor(node) == 2) {
             if (_balanceFactor(node->left) < 0){
@@ -208,7 +209,6 @@ private:
         return node;
     }
 };
-}
 }
 
 #endif //DICTORIUM_AVLDICTIONARY_H
