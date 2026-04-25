@@ -6,14 +6,16 @@
 #include <vector>
 
 namespace dtr {
+namespace detail {
+    template<typename TKey, typename TValue>
+    struct Node {
+        std::pair<TKey, TValue> data;
+        Node* left;
+        Node* right;
+        unsigned char height;
+    };
 
-template<typename TKey, typename TValue>
-struct Node {
-    std::pair<TKey, TValue> data;
-    Node* left;
-    Node* right;
-    unsigned char height;
-};
+
 
 template<typename TKey, typename TValue>
 class IDictionary;
@@ -22,26 +24,102 @@ template<typename TKey, typename TValue, typename TNode>
 class IBalancedTreeDictionary;
 
 template<typename TKey, typename TValue>
-class AvlDictionary : public IDictionary<TKey, TValue>, IBalancedTreeDictionary<TKey, TValue, dtr::Node<TKey, TValue>> {
+class AvlDictionary : public IDictionary<TKey, TValue>, IBalancedTreeDictionary<TKey, TValue, dtr::detail::Node<TKey, TValue>> {
 
 public:
 
-    bool ContainsKey(const TKey& key) const override;
-    bool TryGetValue(const TKey& key, TValue& value) const override;
+    bool ContainsKey(const TKey& key) const override
+    {
+        auto node = _find(_root, key);
+        if (node == 0){
+            return false;
+        } else{
+            return true;
+        }
+    };
+    bool TryGetValue(const TKey& key, TValue& value) const override{
+        auto node = _find(_root, key);
+        if (node == 0){
+            return false;
+        } else{
+            node->data.second = value;
+        }
+        return true;
+    };
 
-    void Add(const TKey& key, const TValue& value) override;
+    void Add(const TKey& key, const TValue& value) override{
+        auto newNode = _initNode(key, value);
+        if (_find(_root, newNode->data.first) != 0)
+            throw std::invalid_argument("Element exists");
+        _root = _insert(_root, newNode);
+        _count++;
+    };
 
-    void InsertOrAssign(const TKey& key, const TValue& value) override;
-    bool Remove(const TKey& key) override;
-    void Clear() override;
-    [[nodiscard]] size_t Count() const override;
-    TValue& GetValue(const TKey& key) override;
-    const TValue& GetValue(const TKey& key) const override;
+    void InsertOrAssign(const TKey& key, const TValue& value) override{
+        auto updateNode = _find(_root, key);
+        if (updateNode == 0){
+            Add(key, value);
+        } else{
+            updateNode->data.second = value;
+        }
+    };
+    bool Remove(const TKey& key) override{
+        auto removeNode = _remove(_root, _initNode(key, nullptr));
+        if (removeNode == 0){
+            return false;
+        } else{
+            _count--;
+            return true;
+        }
+    };
+    void Clear() override{
+        _clear(_root);
+        _root = nullptr;
+        _count = 0;
+    };
+    [[nodiscard]] size_t Count() const override{
+        return _count;
+    };
+    TValue& GetValue(const TKey& key) override{
+        return _find(_root, key)->data.second;
+    };
+    const TValue& GetValue(const TKey& key) const override{
+        return _find(_root, key)->data.second;
+    };
     std::vector<std::pair<TKey, TValue>> LowerBound(const TKey& key) override;
     std::vector<std::pair<TKey, TValue>> UpperBound(const TKey& key) override;
+    [[nodiscard]] virtual unsigned char Height()
+    {
+        return _root? _root->height : 0;
+    };
 
 private:
 
+    void _clear(Node<TKey,TValue>* node){
+        if (!node) return;
+        _clear(node->left);
+        _clear(node->right);
+        delete node;
+    }
+    Node<TKey,TValue>* _initNode(TKey key, TValue value){
+        return new Node<TKey,TValue>{
+                {key, value},
+                nullptr,
+                nullptr,
+                1
+        };
+    }
+    Node<TKey,TValue>* _find (Node<TKey,TValue>* node, TKey key){
+        if (!node) return 0;
+        if (node->data.first > key){
+            return _find(node->left);
+        } else if (node->data.first < key){
+            return _find(node->right);
+        } else{
+            return node;
+        }
+        return 0;
+    }
     Node<TKey,TValue>* _insert(Node<TKey,TValue>* node, Node<TKey,TValue>* newNode){
         if (!node)
             return newNode;
@@ -60,7 +138,7 @@ private:
         if (node->left == 0){
             return node->right;
         }
-        node->left == _removeMin(node->left);
+        node->left = _removeMin(node->left);
         return _balance(node);
     }
 
@@ -83,19 +161,20 @@ private:
         return _balance(node);
     }
     unsigned char _height(Node<TKey, TValue>* node){
-        return node->height ? node->height : 0;
+        return node ? node->height : 0;
     }
 
     unsigned char _balanceFactor(Node<TKey, TValue>* node){
         return _height(node->left) - _height(node->right);
     }
     void _fixHeight(Node<TKey, TValue>* node){
-        unsigned char heightLeft = _height(node->left->height);
-        unsigned char heightRight = _height(node->right->height);
+        unsigned char heightLeft = _height(node->left);
+        unsigned char heightRight = _height(node->right);
         node->height = ((heightLeft > heightRight) ? heightLeft : heightRight) + 1;
     }
 
     Node<TKey,TValue>* _root = nullptr;
+    unsigned int _count = 0;
     Node<TKey, TValue>* _rotationRight(Node<TKey, TValue>* node) override{
         Node<TKey, TValue>* newNode = node->left;
         node->left = newNode->right;
@@ -129,6 +208,7 @@ private:
         return node;
     }
 };
+}
 }
 
 #endif //DICTORIUM_AVLDICTIONARY_H

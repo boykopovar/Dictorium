@@ -8,15 +8,13 @@ namespace dtr {
 
     public:
         IBalancedTreeDictionary() = default;
-        ~IBalancedTreeDictionary() = default;
+        virtual ~IBalancedTreeDictionary() = default;
 
-        [[nodiscard]] virtual unsigned char Height(TNode* p);
+        [[nodiscard]] virtual unsigned char Height();
 
     protected:
-        virtual TNode* RotationRight(TNode* p);
-        virtual TNode* RotationLeft(TNode* p);
-        virtual std::vector<std::pair<TKey, TValue>> LowerBound(const TKey& key);
-        virtual std::vector<std::pair<TKey, TValue>> UpperBound(const TKey& key);
+        virtual TNode* RotationRight(TNode* p) = 0;
+        virtual TNode* RotationLeft(TNode* p) = 0;
     };
 }
 
