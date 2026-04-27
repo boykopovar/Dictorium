@@ -35,9 +35,15 @@ public:
     bool TryGetValue(const TKey& key, TValue& value) const override;
 
     void Add(const TKey& key, const TValue& value) override {
-        if (_table1.size() == 0) {
+        if (_table1.empty()) {
             _table1.assign(DTR_CUCKOO_INIT_CAPACITY, {});
             _table2.assign(DTR_CUCKOO_INIT_CAPACITY, {});
+        }
+        if (static_cast<double>(_keysCount + 1) / (_table1.size() * 2) > _maxLoadFactor) {
+            Rehash();
+        }
+        while (!_insert(key, value, false)) {
+            Rehash();
         }
     }
 
@@ -76,27 +82,56 @@ private:
     bool _insert(TKey key, TValue value, const bool allowOverwrite) {
         const auto maxKicks = _getMaxKicks();
         const auto size = _table1.size();
+        uint64_t stdHash = std::hash<TKey>{}(key);
 
         for (size_t i = 0; i < maxKicks; ++i) {
-            const uint64_t stdHash = std::hash<TKey>{}(key);
-            auto& slot1 = _table1[_hash1(stdHash, size)];
+            auto index1 = _hash1(stdHash, size);
+            auto& slot1 = _table1[index1];
 
             if (slot1.Exists && slot1.Item.first == key) {
                 if (allowOverwrite) {
-                    slot1.Item.first = key;
                     slot1.Item.second = value;
-                    slot1.Exists = true;
                     return true;
                 }
                 throw std::runtime_error("Key already exists");
             }
-            else if (!slot1.Exists) {
+            if (!slot1.Exists) {
                 slot1.Item.first = key;
                 slot1.Item.second = value;
+
                 slot1.Exists = true;
+                ++_keysCount;
+                return true;
             }
 
+            std::swap(key, slot1.Item.first);
+            std::swap(value, slot1.Item.second);
+            stdHash = std::hash<TKey>{}(key);
+
+            auto index2 = _hash2(stdHash, size);
+            auto& slot2 = _table2[index2];
+
+            if (slot2.Exists && slot2.Item.first == key) {
+                if (allowOverwrite) {
+                    slot2.Item.second = value;
+                    return true;
+                }
+                throw std::runtime_error("Key already exists");
+            }
+            if (!slot2.Exists) {
+                slot2.Item.first = key;
+                slot2.Item.second = value;
+
+                slot2.Exists = true;
+                ++_keysCount;
+                return true;
+            }
+
+            std::swap(key, slot2.Item.first);
+            std::swap(value, slot2.Item.second);
+            stdHash = std::hash<TKey>{}(key);
         }
+        return false;
     }
 
     void Rehash();
@@ -112,7 +147,7 @@ private:
     }
 
     inline size_t _getMaxKicks() {
-        if (_table1.size() == 0) return 0;
+        if (_table1.empty()) return 1;
         return static_cast<size_t>(DTR_CUCKOO_KICKS_FACTOR * std::log2(_table1.size()));
     }
 
