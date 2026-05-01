@@ -14,6 +14,7 @@
 #include <vector>
 #include <stdexcept>
 #include "Dictorium/Contracts/Concepts.h"
+#include "CuckooHashDictionary/CuckooHashIterator.tpp"
 
 namespace dtr {
 
@@ -23,6 +24,17 @@ class IDictionary;
 template<CHashable TKey, typename TValue>
 class CuckooHashDictionary : public IDictionary<TKey, TValue> {
 public:
+    using Iterator = CuckooHashIterator<TKey, TValue, false>;
+    using ConstIterator = CuckooHashIterator<TKey, TValue, true>;
+
+    Iterator begin(){ return {&_table1, &_table2, 0, 0}; }
+    Iterator end(){ return {&_table1, &_table2, 2, 0}; }
+
+    ConstIterator begin() const { return {&_table1, &_table2, 0, 0}; }
+    ConstIterator end() const { return {&_table1, &_table2, 2, 0}; }
+
+    ConstIterator cbegin() const { return begin(); }
+    ConstIterator cend() const { return end(); }
 
     CuckooHashDictionary(std::initializer_list<std::pair<TKey, TValue>> init) {
         for (auto i = init.begin(), e = init.end(); i != e; ++i) {
@@ -30,22 +42,16 @@ public:
         }
     }
 
+    template<CPairIterator<TKey, TValue> TIter>
+    CuckooHashDictionary(TIter begin, TIter end) {
+        _build(begin, end, std::distance(begin, end));
+    }
+
     bool ContainsKey(const TKey& key) const override;
 
     bool TryGetValue(const TKey& key, TValue& value) const override;
 
-    void Add(const TKey& key, const TValue& value) override {
-        if (_table1.empty()) {
-            _table1.assign(DTR_CUCKOO_INIT_CAPACITY, {});
-            _table2.assign(DTR_CUCKOO_INIT_CAPACITY, {});
-        }
-        if (static_cast<double>(_keysCount + 1) / (_table1.size() * 2) > _maxLoadFactor) {
-            Rehash();
-        }
-        while (!_insert(key, value, false)) {
-            Rehash();
-        }
-    }
+    void Add(const TKey& key, const TValue& value) override;
 
     void InsertOrAssign(const TKey& key, const TValue& value) override;
 
@@ -64,75 +70,21 @@ public:
             return os << "<class 'LinearDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
         }
         else {
-            throw std::runtime_error("Not implemented");
-            // return this->_writeItems(os, *this);
+            return this->_writeItems(os, *this);
         }
     }
 
 private:
     size_t _keysCount = 0;
 
-    size_t _maxLoadFactor = DTR_CUCKOO_MAX_LOAD_FACTOR;
+    double _maxLoadFactor = DTR_CUCKOO_MAX_LOAD_FACTOR;
     uint64_t _seed1 = DTR_CUCKOO_SEED1;
     uint64_t _seed2 = DTR_CUCKOO_SEED2;
 
     template<CPairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);
 
-    bool _insert(TKey key, TValue value, const bool allowOverwrite) {
-        const auto maxKicks = _getMaxKicks();
-        const auto size = _table1.size();
-        uint64_t stdHash = std::hash<TKey>{}(key);
-
-        for (size_t i = 0; i < maxKicks; ++i) {
-            auto index1 = _hash1(stdHash, size);
-            auto& slot1 = _table1[index1];
-
-            if (slot1.Exists && slot1.Item.first == key) {
-                if (allowOverwrite) {
-                    slot1.Item.second = value;
-                    return true;
-                }
-                throw std::runtime_error("Key already exists");
-            }
-            if (!slot1.Exists) {
-                slot1.Item.first = key;
-                slot1.Item.second = value;
-
-                slot1.Exists = true;
-                ++_keysCount;
-                return true;
-            }
-
-            std::swap(key, slot1.Item.first);
-            std::swap(value, slot1.Item.second);
-            stdHash = std::hash<TKey>{}(key);
-
-            auto index2 = _hash2(stdHash, size);
-            auto& slot2 = _table2[index2];
-
-            if (slot2.Exists && slot2.Item.first == key) {
-                if (allowOverwrite) {
-                    slot2.Item.second = value;
-                    return true;
-                }
-                throw std::runtime_error("Key already exists");
-            }
-            if (!slot2.Exists) {
-                slot2.Item.first = key;
-                slot2.Item.second = value;
-
-                slot2.Exists = true;
-                ++_keysCount;
-                return true;
-            }
-
-            std::swap(key, slot2.Item.first);
-            std::swap(value, slot2.Item.second);
-            stdHash = std::hash<TKey>{}(key);
-        }
-        return false;
-    }
+    bool _insert(TKey key, TValue value, bool allowOverwrite);
 
     void Rehash();
     void Rehash(size_t newTableSize);
@@ -155,6 +107,25 @@ private:
     std::vector<DictSlot<TKey, TValue>> _table2;
 };
 
+    template<CHashable TKey, typename TValue>
+    auto begin(CuckooHashDictionary<TKey, TValue>& dict) noexcept {
+        return dict.begin();
+    }
+
+    template<CHashable TKey, typename TValue>
+    auto end(CuckooHashDictionary<TKey, TValue>& dict) noexcept {
+        return dict.end();
+    }
+
+    template<CHashable TKey, typename TValue>
+    auto begin(const CuckooHashDictionary<TKey, TValue>& dict) noexcept {
+        return dict.begin();
+    }
+
+    template<CHashable TKey, typename TValue>
+    auto end(const CuckooHashDictionary<TKey, TValue>& dict) noexcept {
+        return dict.end();
+    }
 
 }
 
