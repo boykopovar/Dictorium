@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CHAININGHASHDICTIONARY_H
+#define CHAININGHASHDICTIONARY_H
 
 #include <functional>
 #include <initializer_list>
@@ -17,11 +18,14 @@ namespace dtr
 /// </summary>
 /// <typeparam name="TKey">Тип ключа.</typeparam>
 /// <typeparam name="TValue">Тип значения.</typeparam>
-template <typename TKey, typename TValue> class ChainingHashDictionary : public IDictionary<TKey, TValue>
+template <typename TKey, typename TValue, typename Hash = std::hash<TKey>>
+class ChainingHashDictionary : public IDictionary<TKey, TValue>
 {
   private:
     using Pair = std::pair<TKey, TValue>;
     using Bucket = std::list<Pair>;
+
+    Hash _hasher;
 
     std::vector<Bucket> _buckets;
     size_t _count;
@@ -44,26 +48,71 @@ template <typename TKey, typename TValue> class ChainingHashDictionary : public 
     /// </summary>
     ChainingHashDictionary(std::initializer_list<Pair> list);
 
+    template <typename InputIt> ChainingHashDictionary(InputIt first, InputIt last);
+
+    /// <summary>
+    /// Проверяет наличие ключа в словаре.
+    /// </summary>
+    /// <param name="key">Ключ для поиска.</param>
+    /// <returns>true, если ключ найден; иначе false.</returns>
     bool ContainsKey(const TKey &key) const override;
+
+    /// <summary>
+    /// Пытается получить значение по ключу.
+    /// При успехе записывает значение в value.
+    /// </summary>
+    /// <param name="key">Ключ для поиска.</param>
+    /// <param name="value">Переменная для записи значения.</param>
+    /// <returns>true, если ключ найден; иначе false.</returns>
     bool TryGetValue(const TKey &key, TValue &value) const override;
 
+    /// <summary>
+    /// Добавляет пару ключ-значение в словарь.
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <param name="value">Значение.</param>
     void Add(const TKey &key, const TValue &value) override;
+
+    /// <summary>
+    /// Вставляет новую пару или обновляет существующую.
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <param name="value">Значение.</param>
     void InsertOrAssign(const TKey &key, const TValue &value) override;
 
+    /// <summary>
+    /// Удаляет элемент по ключу.
+    /// </summary>
+    /// <param name="key">Ключ для удаления.</param>
+    /// <returns>true, если элемент был удалён; иначе false.</returns>
     bool Remove(const TKey &key) override;
+
+    /// <summary>
+    /// Очищает словарь.
+    /// </summary>
     void Clear() override;
 
+    /// <summary>
+    /// Возвращает количество элементов.
+    /// </summary>
+    /// <returns>Количество элементов.</returns>
     size_t Count() const override;
 
+    /// <summary>
+    /// Возвращает ссылку на значение по ключу.
+    /// </summary>
+    /// <param name="key">Ключ.</param>
+    /// <returns>Ссылка на значение.</returns>
     TValue &GetValue(const TKey &key) override;
+
     const TValue &GetValue(const TKey &key) const override;
 
   public:
     class Iterator
     {
       private:
-        using OuterIt = typename std::vector<Bucket>::iterator;
-        using InnerIt = typename Bucket::iterator;
+        using OuterIt = typename std::vector<Bucket>::const_iterator;
+        using InnerIt = typename Bucket::const_iterator;
 
         OuterIt _outer;
         OuterIt _outerEnd;
@@ -71,12 +120,11 @@ template <typename TKey, typename TValue> class ChainingHashDictionary : public 
 
         void _skipEmpty()
         {
-            while (_outer != _outerEnd && _inner == _outer->end())
-            {
+            while (_outer != _outerEnd && _outer->empty())
                 ++_outer;
-                if (_outer != _outerEnd)
-                    _inner = _outer->begin();
-            }
+
+            if (_outer != _outerEnd)
+                _inner = _outer->begin();
         }
 
       public:
@@ -87,15 +135,25 @@ template <typename TKey, typename TValue> class ChainingHashDictionary : public 
             _skipEmpty();
         }
 
-        Pair &operator*()
+        const Pair &operator*() const
         {
             return *_inner;
         }
 
         Iterator &operator++()
         {
+            if (_outer == _outerEnd)
+                return *this;
+
             ++_inner;
-            _skipEmpty();
+
+            while (_outer != _outerEnd && _inner == _outer->end())
+            {
+                ++_outer;
+                if (_outer != _outerEnd)
+                    _inner = _outer->begin();
+            }
+
             return *this;
         }
 
@@ -110,10 +168,12 @@ template <typename TKey, typename TValue> class ChainingHashDictionary : public 
         }
     };
 
-    Iterator begin();
-    Iterator end();
+    Iterator begin() const;
+    Iterator end() const;
 };
 
 } // namespace dtr
 
 #include "ChainingHashDictionary/ChainingHashDictionary.tpp"
+
+#endif // CHAININGHASHDICTIONARY_H

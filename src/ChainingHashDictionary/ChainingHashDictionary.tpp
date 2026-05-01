@@ -1,34 +1,57 @@
-#pragma once
-
-#include "Dictorium/Entities/ChainingHashDictionary.h"
+#ifndef CHAININGHASHDICTIONARY_TPP
+#define CHAININGHASHDICTIONARY_TPP
 
 namespace dtr
 {
 
-template <typename TKey, typename TValue>
-ChainingHashDictionary<TKey, TValue>::ChainingHashDictionary(size_t capacity) : _buckets(capacity), _count(0)
+template <typename TKey, typename TValue, typename Hash>
+ChainingHashDictionary<TKey, TValue, Hash>::ChainingHashDictionary(size_t capacity) : _buckets(capacity), _count(0)
 {
 }
 
-template <typename TKey, typename TValue>
-ChainingHashDictionary<TKey, TValue>::ChainingHashDictionary(std::initializer_list<Pair> list) : _buckets(8), _count(0)
+template <typename TKey, typename TValue, typename Hash>
+ChainingHashDictionary<TKey, TValue, Hash>::ChainingHashDictionary(std::initializer_list<Pair> list)
+    : _buckets(8), _count(0)
 {
     for (const auto &[key, value] : list)
     {
-        if (ContainsKey(key))
+        try
+        {
+            Add(key, value);
+        }
+        catch (const std::invalid_argument &)
         {
             throw std::invalid_argument("Duplicate key");
         }
-        Add(key, value);
     }
 }
 
-template <typename TKey, typename TValue> size_t ChainingHashDictionary<TKey, TValue>::_getIndex(const TKey &key) const
+template <typename TKey, typename TValue, typename Hash>
+template <typename InputIt>
+ChainingHashDictionary<TKey, TValue, Hash>::ChainingHashDictionary(InputIt first, InputIt last) : _buckets(8), _count(0)
 {
-    return std::hash<TKey>{}(key) % _buckets.size();
+    for (auto it = first; it != last; ++it)
+    {
+        const auto &[key, value] = *it;
+
+        try
+        {
+            Add(key, value);
+        }
+        catch (const std::invalid_argument &)
+        {
+            throw std::invalid_argument("Duplicate key");
+        }
+    }
 }
 
-template <typename TKey, typename TValue> void ChainingHashDictionary<TKey, TValue>::_rehash()
+template <typename TKey, typename TValue, typename Hash>
+size_t ChainingHashDictionary<TKey, TValue, Hash>::_getIndex(const TKey &key) const
+{
+    return _hasher(key) % _buckets.size();
+}
+
+template <typename TKey, typename TValue, typename Hash> void ChainingHashDictionary<TKey, TValue, Hash>::_rehash()
 {
     size_t newSize = _buckets.size() * 2;
     std::vector<Bucket> newBuckets(newSize);
@@ -37,7 +60,7 @@ template <typename TKey, typename TValue> void ChainingHashDictionary<TKey, TVal
     {
         for (const auto &[key, value] : bucket)
         {
-            size_t index = std::hash<TKey>{}(key) % newSize;
+            size_t index = _hasher(key) % newSize;
             newBuckets[index].emplace_back(key, value);
         }
     }
@@ -45,7 +68,8 @@ template <typename TKey, typename TValue> void ChainingHashDictionary<TKey, TVal
     _buckets = std::move(newBuckets);
 }
 
-template <typename TKey, typename TValue> void ChainingHashDictionary<TKey, TValue>::_ensureCapacity()
+template <typename TKey, typename TValue, typename Hash>
+void ChainingHashDictionary<TKey, TValue, Hash>::_ensureCapacity()
 {
     if ((double)_count / _buckets.size() > _maxLoadFactor)
     {
@@ -55,7 +79,8 @@ template <typename TKey, typename TValue> void ChainingHashDictionary<TKey, TVal
 
 // ===== Методы =====
 
-template <typename TKey, typename TValue> bool ChainingHashDictionary<TKey, TValue>::ContainsKey(const TKey &key) const
+template <typename TKey, typename TValue, typename Hash>
+bool ChainingHashDictionary<TKey, TValue, Hash>::ContainsKey(const TKey &key) const
 {
     const auto &bucket = _buckets[_getIndex(key)];
     for (const auto &[k, _] : bucket)
@@ -66,8 +91,8 @@ template <typename TKey, typename TValue> bool ChainingHashDictionary<TKey, TVal
     return false;
 }
 
-template <typename TKey, typename TValue>
-bool ChainingHashDictionary<TKey, TValue>::TryGetValue(const TKey &key, TValue &value) const
+template <typename TKey, typename TValue, typename Hash>
+bool ChainingHashDictionary<TKey, TValue, Hash>::TryGetValue(const TKey &key, TValue &value) const
 {
     const auto &bucket = _buckets[_getIndex(key)];
     for (const auto &[k, v] : bucket)
@@ -81,8 +106,8 @@ bool ChainingHashDictionary<TKey, TValue>::TryGetValue(const TKey &key, TValue &
     return false;
 }
 
-template <typename TKey, typename TValue>
-void ChainingHashDictionary<TKey, TValue>::Add(const TKey &key, const TValue &value)
+template <typename TKey, typename TValue, typename Hash>
+void ChainingHashDictionary<TKey, TValue, Hash>::Add(const TKey &key, const TValue &value)
 {
     auto &bucket = _buckets[_getIndex(key)];
 
@@ -99,8 +124,8 @@ void ChainingHashDictionary<TKey, TValue>::Add(const TKey &key, const TValue &va
     _ensureCapacity();
 }
 
-template <typename TKey, typename TValue>
-void ChainingHashDictionary<TKey, TValue>::InsertOrAssign(const TKey &key, const TValue &value)
+template <typename TKey, typename TValue, typename Hash>
+void ChainingHashDictionary<TKey, TValue, Hash>::InsertOrAssign(const TKey &key, const TValue &value)
 {
     auto &bucket = _buckets[_getIndex(key)];
 
@@ -118,7 +143,8 @@ void ChainingHashDictionary<TKey, TValue>::InsertOrAssign(const TKey &key, const
     _ensureCapacity();
 }
 
-template <typename TKey, typename TValue> bool ChainingHashDictionary<TKey, TValue>::Remove(const TKey &key)
+template <typename TKey, typename TValue, typename Hash>
+bool ChainingHashDictionary<TKey, TValue, Hash>::Remove(const TKey &key)
 {
     auto &bucket = _buckets[_getIndex(key)];
 
@@ -134,19 +160,21 @@ template <typename TKey, typename TValue> bool ChainingHashDictionary<TKey, TVal
     return false;
 }
 
-template <typename TKey, typename TValue> void ChainingHashDictionary<TKey, TValue>::Clear()
+template <typename TKey, typename TValue, typename Hash> void ChainingHashDictionary<TKey, TValue, Hash>::Clear()
 {
     _buckets.clear();
     _buckets.resize(8);
     _count = 0;
 }
 
-template <typename TKey, typename TValue> size_t ChainingHashDictionary<TKey, TValue>::Count() const
+template <typename TKey, typename TValue, typename Hash>
+size_t ChainingHashDictionary<TKey, TValue, Hash>::Count() const
 {
     return _count;
 }
 
-template <typename TKey, typename TValue> TValue &ChainingHashDictionary<TKey, TValue>::GetValue(const TKey &key)
+template <typename TKey, typename TValue, typename Hash>
+TValue &ChainingHashDictionary<TKey, TValue, Hash>::GetValue(const TKey &key)
 {
     auto &bucket = _buckets[_getIndex(key)];
 
@@ -159,8 +187,8 @@ template <typename TKey, typename TValue> TValue &ChainingHashDictionary<TKey, T
     throw std::out_of_range("Key not found");
 }
 
-template <typename TKey, typename TValue>
-const TValue &ChainingHashDictionary<TKey, TValue>::GetValue(const TKey &key) const
+template <typename TKey, typename TValue, typename Hash>
+const TValue &ChainingHashDictionary<TKey, TValue, Hash>::GetValue(const TKey &key) const
 {
     const auto &bucket = _buckets[_getIndex(key)];
 
@@ -173,16 +201,18 @@ const TValue &ChainingHashDictionary<TKey, TValue>::GetValue(const TKey &key) co
     throw std::out_of_range("Key not found");
 }
 
-template <typename TKey, typename TValue>
-typename ChainingHashDictionary<TKey, TValue>::Iterator ChainingHashDictionary<TKey, TValue>::begin()
+template <typename TKey, typename TValue, typename Hash>
+typename ChainingHashDictionary<TKey, TValue, Hash>::Iterator ChainingHashDictionary<TKey, TValue, Hash>::begin() const
 {
     return Iterator(_buckets.begin(), _buckets.end());
 }
 
-template <typename TKey, typename TValue>
-typename ChainingHashDictionary<TKey, TValue>::Iterator ChainingHashDictionary<TKey, TValue>::end()
+template <typename TKey, typename TValue, typename Hash>
+typename ChainingHashDictionary<TKey, TValue, Hash>::Iterator ChainingHashDictionary<TKey, TValue, Hash>::end() const
 {
     return Iterator(_buckets.end(), _buckets.end());
 }
 
 } // namespace dtr
+
+#endif // CHAININGHASHDICTIONARY_TPP
