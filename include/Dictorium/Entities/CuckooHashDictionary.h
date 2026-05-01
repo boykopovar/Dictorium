@@ -19,6 +19,13 @@
 namespace dtr {
 
 template<typename TKey, typename TValue>
+struct Displacement {
+    int Table;
+    size_t Index;
+    std::pair<TKey, TValue> Old;
+};
+
+template<typename TKey, typename TValue>
 class IDictionary;
 
 template<CHashable TKey, typename TValue>

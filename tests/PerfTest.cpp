@@ -8,7 +8,7 @@
 #define DICT_PERF_KEY_LEN 10
 #define DICT_PERF_TEST_INIT true
 
-#define DTR_TEST_TYPE PerfectHashDictionary
+#define DTR_TEST_TYPE CuckooHashDictionary
 #define STL_TEST_TYPE std::unordered_map
 
 
