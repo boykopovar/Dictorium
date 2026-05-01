@@ -10,7 +10,7 @@ namespace dtr {
         IBalancedTreeDictionary() = default;
         virtual ~IBalancedTreeDictionary() = default;
 
-        [[nodiscard]] virtual unsigned char Height();
+        [[nodiscard]] virtual unsigned char Height() const = 0;
 
     protected:
         virtual TNode* RotationRight(TNode* p) = 0;

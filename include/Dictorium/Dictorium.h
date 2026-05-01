@@ -5,7 +5,7 @@
 #include "Contracts/Contracts.h"
 #include "Entities/LinearDictionary.h"
 #include "Entities/PerfectHashDictionary.h"
-#include "Entities/AvlDictionar.h"
+#include "Entities/AvlDictionary.h"
 #include "Entities/Console.h"
 
 #endif //DICTORIUM_H
