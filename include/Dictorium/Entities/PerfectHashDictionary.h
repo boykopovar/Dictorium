@@ -14,12 +14,6 @@
 #define PERFECTHASH_DICT_NAME "PerfectHashDictionary"
 #define PERFECTHASH_DEPRECATED_KEYS "Valid only for keys from the original set"
 
-#ifdef _MSC_VER
-    #include <xmmintrin.h>
-    #define PH_PREFETCH(addr) _mm_prefetch(reinterpret_cast<const char*>(addr), _MM_HINT_T0)
-    #else
-    #define PH_PREFETCH(addr) __builtin_prefetch(addr, 0, 1)
-#endif
 
 namespace dtr{
 
@@ -27,12 +21,6 @@ struct PhBucket {
     uint64_t Offset;
     uint64_t Size;
     uint64_t Seed;
-};
-
-template<typename TKey, typename TValue>
-struct PhSlot {
-    std::pair<TKey, TValue> Item;
-    bool Exists;
 };
 
 template<typename TKey, typename TValue>
@@ -196,18 +184,10 @@ public:
 
 private:
 
-    static inline uint64_t _fastRange(uint64_t a, uint64_t b) {
-    #ifdef _MSC_VER
-            uint64_t high;
-            _umul128(a, b, &high);
-            return high;
-    #else
-            return static_cast<uint64_t>((static_cast<__uint128_t>(a) * b) >> 64);
-    #endif
-    }
+
 
     static inline size_t _hashRaw(const uint64_t stdHash, const uint64_t seed, const size_t tableSize) {
-        return _fastRange((seed * PERFECTHASH_SALT + 1) * stdHash + seed, tableSize);
+        return FastRange((seed * PERFECTHASH_SALT + 1) * stdHash + seed, tableSize);
     }
 
     size_t _hash(const TKey& key, const uint64_t seed, const size_t tableSize) const {
@@ -219,7 +199,7 @@ private:
     uint64_t _tableSize;
 
     std::vector<PhBucket> _buckets;
-    std::vector<PhSlot<TKey, TValue>> _values;
+    std::vector<DictSlot<TKey, TValue>> _values;
 
     [[nodiscard]] uint64_t _randomNum() const;
     uint64_t _findSeed(const std::vector<std::pair<TKey, TValue>>& bucket, size_t tableSize) const;
@@ -230,7 +210,7 @@ private:
     template<CPairIterator<TKey, TValue> TIter>
     void _build(TIter begin, TIter end, size_t size);
 
-    const PhSlot<TKey, TValue>& _getExistedSlot(const TKey& key) const {
+    const DictSlot<TKey, TValue>& _getExistedSlot(const TKey& key) const {
         auto flatIndex = _findIndex(key);
         if (flatIndex == -1) throw std::out_of_range("Key not found");
 
