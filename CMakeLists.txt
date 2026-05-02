@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(DICTORIUM_SOURCES
-        src/dtr.cpp
+       src/dtr.cpp
 )
 
 add_library(Dictorium STATIC
@@ -23,11 +23,17 @@ add_executable(DictoriumMain
 
 target_link_libraries(DictoriumMain Dictorium)
 
-add_executable(PerfHashSpeed
+add_executable(PerfTest
         tests/PerfTest.cpp
         tests/Utils/TestUtils.cpp
 )
-target_link_libraries(PerfHashSpeed Dictorium)
+target_link_libraries(PerfTest Dictorium)
+
+add_executable(ChainingHashSpeed
+        tests/ChainingTest.cpp
+        tests/Utils/TestUtils.cpp
+)
+target_link_libraries(ChainingHashSpeed Dictorium)
 
 add_executable(AvlTest
         tests/AvlTest.cpp

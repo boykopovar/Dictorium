@@ -21,7 +21,7 @@ using namespace dtr;
 using Value = double;
 using Clock = std::chrono::steady_clock;
 
-constexpr std::size_t N = 200000;
+constexpr std::size_t N = 200'000;
 constexpr std::size_t READ_OPS = 1'000'000;
 constexpr std::size_t INSERT_OPS = 10'000;
 constexpr int RUNS = 10;

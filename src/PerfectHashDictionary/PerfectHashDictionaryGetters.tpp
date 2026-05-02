@@ -10,7 +10,7 @@ uint64_t PerfectHashDictionary<TKey, TValue>::_findIndex(const TKey &key) const 
     const auto& bucket = _buckets[_hashRaw(stdHash, _globalSeed, _tableSize)];
 
     if (bucket.Size == 0) return -1;
-    PH_PREFETCH(&_values[bucket.Offset]);
+    DTR_PREFETCH(&_values[bucket.Offset]);
     return bucket.Offset + _hashRaw(stdHash, bucket.Seed, bucket.Size);
 }
 
