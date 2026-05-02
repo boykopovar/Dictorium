@@ -38,10 +38,10 @@ public:
     class Iterator {
     public:
         using iterator_category = std::forward_iterator_tag;
-        using value_type        = std::pair<TKey, TValue>;
-        using reference         = std::pair<TKey, TValue>&;
-        using pointer           = std::pair<TKey, TValue>*;
-        using difference_type   = std::ptrdiff_t;
+        using value_type = std::pair<TKey, TValue>;
+        using reference = std::pair<TKey, TValue>&;
+        using pointer = std::pair<TKey, TValue>*;
+        using difference_type = std::ptrdiff_t;
 
         explicit Iterator(Node* root) : _current(nullptr) {
             _pushLeft(root);
@@ -52,7 +52,7 @@ public:
         reference operator*()  const { return  _current->data; }
         pointer   operator->() const { return &_current->data; }
 
-        Iterator& operator++()    { _advance(); return *this; }
+        Iterator& operator++() { _advance(); return *this; }
         Iterator  operator++(int) { Iterator tmp = *this; _advance(); return tmp; }
 
         bool operator==(const Iterator& o) const { return _current == o._current; }

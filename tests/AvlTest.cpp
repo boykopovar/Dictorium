@@ -21,7 +21,7 @@ using namespace dtr;
 using Value = double;
 using Clock = std::chrono::steady_clock;
 
-constexpr std::size_t N = 200'000;
+constexpr std::size_t N = 200000;
 constexpr std::size_t READ_OPS = 1'000'000;
 constexpr std::size_t INSERT_OPS = 10'000;
 constexpr int RUNS = 10;
@@ -54,10 +54,6 @@ struct Scenario {
     std::vector<Key> containsKeys;
     std::vector<std::pair<Key, Value>> insertData;
 };
-
-static void sep() {
-    std::cout << "---------------------------------------------\n";
-}
 
 static void faster(const char* a, const char* b, double ta, double tb) {
     const double r = tb / ta;
@@ -347,7 +343,7 @@ static double BenchIterAvl(const Scenario<Key>& s) {
 
 template <class Key>
 static void RunForType(const char* typeName) {
-    std::cout << "\n=== Key type: " << typeName << " ===\n";
+    std::cout << "\n Key type: " << typeName << " \n";
 
     double initMapSum = 0.0;
     double initAvlSum = 0.0;
@@ -395,35 +391,30 @@ static void RunForType(const char* typeName) {
     const double iterMap = iterMapSum / RUNS;
     const double iterAvl = iterAvlSum / RUNS;
 
-    sep();
     std::cout << "1. Initialization (construct from N elements)\n";
     std::cout << "  std::map      : " << (initMap / 1e6) << " ms\n";
     std::cout << "  AvlDictionary : " << (initAvl / 1e6) << " ms\n";
     if (initAvl < initMap) faster("AvlDictionary", "std::map", initAvl, initMap);
-    else                   faster("std::map", "AvlDictionary", initMap, initAvl);
+    else faster("std::map", "AvlDictionary", initMap, initAvl);
 
-    sep();
     std::cout << "2. Read (GetValue on existing keys, random order)\n";
     std::cout << "  std::map      : " << (readMap / READ_OPS) << " ns/op\n";
     std::cout << "  AvlDictionary : " << (readAvl / READ_OPS) << " ns/op\n";
     if (readAvl < readMap) faster("AvlDictionary", "std::map", readAvl, readMap);
-    else                   faster("std::map", "AvlDictionary", readMap, readAvl);
+    else faster("std::map", "AvlDictionary", readMap, readAvl);
 
-    sep();
     std::cout << "3. ContainsKey (all keys exist)\n";
     std::cout << "  std::map      : " << (containsMap / READ_OPS) << " ns/op\n";
     std::cout << "  AvlDictionary : " << (containsAvl / READ_OPS) << " ns/op\n";
     if (containsAvl < containsMap) faster("AvlDictionary", "std::map", containsAvl, containsMap);
-    else                           faster("std::map", "AvlDictionary", containsMap, containsAvl);
+    else faster("std::map", "AvlDictionary", containsMap, containsAvl);
 
-    sep();
     std::cout << "4. Insert element (avg over " << INSERT_OPS << " inserts, fresh tree each run)\n";
     std::cout << "  std::map      : " << insertMap << " ns/op\n";
     std::cout << "  AvlDictionary : " << insertAvl << " ns/op\n";
     if (insertAvl < insertMap) faster("AvlDictionary", "std::map", insertAvl, insertMap);
-    else                       faster("std::map", "AvlDictionary", insertMap, insertAvl);
+    else faster("std::map", "AvlDictionary", insertMap, insertAvl);
 
-    sep();
     std::cout << "5. Tree height\n";
     const double avlTheory = std::ceil(1.45 * std::log2(static_cast<double>(N) + 1.0));
     const double rbTheory  = std::ceil(2.0  * std::log2(static_cast<double>(N) + 1.0));
@@ -431,24 +422,22 @@ static void RunForType(const char* typeName) {
     std::cout << "  AVL max (theory) : ~" << avlTheory << " levels for N=" << N << "\n";
     std::cout << "  std::map (RB max): ~" << rbTheory << " levels for N=" << N << "\n";
 
-    sep();
     std::cout << "6. Full in-order iteration\n";
     std::cout << "  std::map      : " << (iterMap / N) << " ns/op\n";
     std::cout << "  AvlDictionary : " << (iterAvl / N) << " ns/op\n";
     if (iterAvl < iterMap) faster("AvlDictionary", "std::map", iterAvl, iterMap);
-    else                   faster("std::map", "AvlDictionary", iterMap, iterAvl);
+    else faster("std::map", "AvlDictionary", iterMap, iterAvl);
 }
 
 int main() {
     std::cout << std::fixed << std::setprecision(2);
-    std::cout << "\n=== AvlDictionary vs std::map, runs=" << RUNS << " ===\n";
+    std::cout << "\n AvlDictionary vs std::map, runs=" << RUNS;
 
     RunForType<int>("int");
     RunForType<long long>("long long");
     RunForType<std::string>("std::string");
     RunForType<BigKey>("BigKey (64 bytes)");
 
-    sep();
-    std::cout << "\n";
+    std::cout << '\n';
     return 0;
 }
