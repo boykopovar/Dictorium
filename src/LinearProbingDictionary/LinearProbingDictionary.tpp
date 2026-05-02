@@ -198,12 +198,6 @@ LinearProbingDictionary<TKey, TValue, Hash>::Iterator::Iterator(size_t index, co
     _skip();
 }
 
-template <typename TKey, typename TValue, typename Hash>
-const std::pair<const TKey &, const TValue &> LinearProbingDictionary<TKey, TValue, Hash>::Iterator::operator*() const
-{
-    const auto &e = (*_table)[_index];
-    return {e.key, e.value};
-}
 
 template <typename TKey, typename TValue, typename Hash>
 typename LinearProbingDictionary<TKey, TValue, Hash>::Iterator &LinearProbingDictionary<TKey, TValue,

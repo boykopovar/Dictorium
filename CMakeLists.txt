@@ -23,8 +23,15 @@ add_executable(DictoriumMain
 
 target_link_libraries(DictoriumMain Dictorium)
 
-add_executable(PerfHashSpeed
+add_executable(PerfTest
         tests/PerfTest.cpp
         tests/Utils/TestUtils.cpp
 )
-target_link_libraries(PerfHashSpeed Dictorium)
+target_link_libraries(PerfTest Dictorium)
+
+add_executable(ChainingHashSpeed
+        tests/ChainingTest.cpp
+        tests/Utils/TestUtils.cpp
+)
+target_link_libraries(ChainingHashSpeed Dictorium)
+

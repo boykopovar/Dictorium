@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <initializer_list>
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
@@ -17,19 +18,19 @@ namespace dtr
 template <typename TKey, typename TValue, typename Hash = std::hash<TKey>>
 class LinearProbingDictionary : public IDictionary<TKey, TValue>
 {
-  private:
+private:
     enum class EntryState
     {
-        Empty,
-        Occupied,
-        Deleted
+      Empty,
+      Occupied,
+      Deleted
     };
 
     struct Entry
     {
-        TKey key;
-        TValue value;
-        EntryState state = EntryState::Empty;
+      TKey key;
+      TValue value;
+      EntryState state = EntryState::Empty;
     };
 
     std::vector<Entry> _table;
@@ -38,13 +39,21 @@ class LinearProbingDictionary : public IDictionary<TKey, TValue>
 
     static constexpr double _maxLoadFactor = 0.75;
 
-  private:
     size_t _findIndex(const TKey &key) const;
     size_t _findSlotForInsert(const TKey &key);
     void _rehash();
     void _ensureCapacity();
 
-  public:
+public:
+    std::ostream& WriteToStream(std::ostream& os) const override {
+    if constexpr (!CStreamWritable<TValue> && ! CStreamWritable<TKey>) {
+      return os << "<class 'LinearProbingDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
+    }
+    else {
+      return this->_writeItems(os, *this);
+    }
+    }
+
     /// <summary>
     /// Создаёт пустой словарь.
     /// </summary>
@@ -68,19 +77,34 @@ class LinearProbingDictionary : public IDictionary<TKey, TValue>
     TValue &GetValue(const TKey &key) override;
     const TValue &GetValue(const TKey &key) const override;
 
-  public:
     class Iterator
     {
-      private:
+    private:
         size_t _index;
         const std::vector<Entry> *_table;
+        mutable std::optional<std::pair<const TKey, TValue>> _current;
 
         void _skip();
+        void _updateCurrent() const {
+            if (_index < _table->size()) {
+                _current.emplace((*_table)[_index].key, (*_table)[_index].value);
+            }
+        }
 
-      public:
+
+    public:
         Iterator(size_t index, const std::vector<Entry> *table);
 
-        const std::pair<const TKey &, const TValue &> operator*() const;
+
+        const std::pair<const TKey, TValue>& operator*() const {
+            _updateCurrent();
+            return *_current;
+        }
+
+        const std::pair<const TKey, TValue>* operator->() const {
+            _updateCurrent();
+            return &*_current;
+        }
 
         Iterator &operator++();
 
@@ -91,6 +115,26 @@ class LinearProbingDictionary : public IDictionary<TKey, TValue>
     Iterator begin() const;
     Iterator end() const;
 };
+
+template<CHashable TKey, typename TValue, typename Hash>
+    auto begin(LinearProbingDictionary<TKey, TValue, Hash>& dict) noexcept {
+  return dict.begin();
+}
+
+template<CHashable TKey, typename TValue, typename Hash>
+auto end(LinearProbingDictionary<TKey, TValue, Hash>& dict) noexcept {
+  return dict.end();
+}
+
+template<CHashable TKey, typename TValue, typename Hash>
+auto begin(const LinearProbingDictionary<TKey, TValue, Hash>& dict) noexcept {
+  return dict.begin();
+}
+
+template<CHashable TKey, typename TValue, typename Hash>
+auto end(const LinearProbingDictionary<TKey, TValue, Hash>& dict) noexcept {
+  return dict.end();
+}
 
 } // namespace dtr
 
