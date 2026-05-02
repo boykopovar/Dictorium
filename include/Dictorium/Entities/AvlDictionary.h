@@ -49,18 +49,18 @@ public:
         }
         Iterator() : _current(nullptr) {}
 
-        reference operator*()  const { return  _current->data; }
-        pointer   operator->() const { return &_current->data; }
+        reference operator*() const { return _current->data; }
+        pointer operator->() const { return &_current->data; }
 
         Iterator& operator++() { _advance(); return *this; }
-        Iterator  operator++(int) { Iterator tmp = *this; _advance(); return tmp; }
+        Iterator operator++(int) { Iterator tmp = *this; _advance(); return tmp; }
 
         bool operator==(const Iterator& o) const { return _current == o._current; }
         bool operator!=(const Iterator& o) const { return _current != o._current; }
 
     private:
         std::stack<Node*> _stack;
-        Node*             _current;
+        Node* _current;
 
         void _pushLeft(Node* node) {
             while (node) { _stack.push(node); node = node->left; }
@@ -163,7 +163,7 @@ public:
     };
 
     Iterator begin() const { return Iterator(_root); }
-    Iterator end()   const { return Iterator(); }
+    Iterator end() const { return Iterator(); }
 
     std::ostream& WriteToStream(std::ostream& os) const override {
         return this->_writeItems(os, *this);
@@ -235,7 +235,7 @@ private:
             };
         }
         if (key < node->data.first)
-            node->left  = _insert(node->left,  key, value, inserted);
+            node->left = _insert(node->left, key, value, inserted);
         else if (key > node->data.first)
             node->right = _insert(node->right, key, value, inserted);
         return _balance(node);
@@ -257,20 +257,20 @@ private:
         if (!node) { removed = false; return nullptr; }
 
         if (key < node->data.first) {
-            node->left  = _remove(node->left,  key, removed);
+            node->left = _remove(node->left, key, removed);
         } else if (key > node->data.first) {
             node->right = _remove(node->right, key, removed);
         } else {
             removed = true;
-            Node* left  = node->left;
+            Node* left = node->left;
             Node* right = node->right;
             delete node;
 
             if (!right) return left;
 
-            Node* min   = _findMin(right);
-            min->right  = _removeMin(right);
-            min->left   = left;
+            Node* min = _findMin(right);
+            min->right = _removeMin(right);
+            min->left = left;
             return _balance(min);
         }
         return _balance(node);
