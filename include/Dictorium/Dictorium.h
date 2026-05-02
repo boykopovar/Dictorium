@@ -37,6 +37,7 @@ static inline uint64_t FastRange(uint64_t a, uint64_t b) {
 #include "Entities/ChainingHashDictionary.h"
 #include "Entities/PerfectHashDictionary.h"
 #include "Entities/CuckooHashDictionary.h"
+#include "Entities/AvlDictionary.h"
 #include "Entities/Console.h"
 
 #endif //DICTORIUM_H

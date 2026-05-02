@@ -35,3 +35,8 @@ add_executable(ChainingHashSpeed
 )
 target_link_libraries(ChainingHashSpeed Dictorium)
 
+add_executable(AvlTest
+        tests/AvlTest.cpp
+        tests/Utils/TestUtils.cpp
+)
+target_link_libraries(AvlTest Dictorium)
