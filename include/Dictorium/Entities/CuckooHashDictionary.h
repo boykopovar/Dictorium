@@ -74,7 +74,7 @@ public:
 
     std::ostream& WriteToStream(std::ostream& os) const override {
         if constexpr (!CStreamWritable<TValue> && ! CStreamWritable<TKey>) {
-            return os << "<class 'LinearDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
+            return os << "<class 'CuckooHashDictionary' TKey=" << typeid(TKey).name() << ", TValue=" << typeid(TValue).name() << '>';
         }
         else {
             return this->_writeItems(os, *this);

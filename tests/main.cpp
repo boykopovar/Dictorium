@@ -6,7 +6,7 @@ void print_json(const IDictionary<std::string, int>& dict);
 
 
 int main() {
-  CuckooHashDictionary<std::string, int> dict = {
+  LinearProbingDictionary<std::string, int> dict = {
     {"test1", 1},
     {"test2", 2},
   };
