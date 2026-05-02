@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <atomic>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -7,6 +9,8 @@
 #include <map>
 #include <numeric>
 #include <random>
+#include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -14,7 +18,6 @@
 
 using namespace dtr;
 
-using Key   = int;
 using Value = double;
 using Clock = std::chrono::steady_clock;
 
@@ -23,12 +26,34 @@ constexpr std::size_t READ_OPS = 1'000'000;
 constexpr std::size_t INSERT_OPS = 10'000;
 constexpr int RUNS = 10;
 
-constexpr std::uint64_t DATA_SEED    = 0xC001D00DULL;
-constexpr std::uint64_t READ_SEED    = 0xA11CE5ULL;
-constexpr std::uint64_t CONTAINS_SEED = 0xBADC0FFEEULL;
-constexpr std::uint64_t INSERT_SEED   = 0xC0FFEEULL;
-
 volatile std::uint64_t g_sink = 0;
+
+struct BigKey {
+    std::uint64_t part[8]{};
+
+    auto operator<=>(const BigKey& other) const noexcept {
+        for (int i = 0; i < 8; ++i) {
+            auto cmp = part[i] <=> other.part[i];
+            if (cmp != 0) return cmp;
+        }
+        return std::strong_ordering::equal;
+    }
+
+    bool operator==(const BigKey& other) const noexcept {
+        for (int i = 0; i < 8; ++i) {
+            if (part[i] != other.part[i]) return false;
+        }
+        return true;
+    }
+};
+
+template <class Key>
+struct Scenario {
+    std::vector<std::pair<Key, Value>> data;
+    std::vector<Key> readKeys;
+    std::vector<Key> containsKeys;
+    std::vector<std::pair<Key, Value>> insertData;
+};
 
 static void sep() {
     std::cout << "---------------------------------------------\n";
@@ -47,44 +72,112 @@ static double MeasureNs(F&& f) {
     return std::chrono::duration<double, std::nano>(e - s).count();
 }
 
-template <class F>
-static double AverageNs(int runs, F&& f) {
-    double sum = 0.0;
-    for (int i = 0; i < runs; ++i) {
-        sum += MeasureNs(f);
-    }
-    return sum / runs;
+static std::uint64_t Mix64(std::uint64_t x) {
+    x += 0x9e3779b97f4a7c15ULL;
+    x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+    x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+    return x ^ (x >> 31);
 }
 
-template <class F>
-static double AverageValue(int runs, F&& f) {
-    double sum = 0.0;
-    for (int i = 0; i < runs; ++i) {
-        sum += f();
-    }
-    return sum / runs;
+static std::uint64_t MakeRandomSeed() {
+    static std::atomic<std::uint64_t> counter{0};
+
+    const auto now = static_cast<std::uint64_t>(
+            std::chrono::high_resolution_clock::now().time_since_epoch().count()
+    );
+
+    std::random_device rd;
+    std::uint64_t seed =
+            now ^
+            (static_cast<std::uint64_t>(rd()) << 1) ^
+            (counter.fetch_add(1) << 32);
+
+    return Mix64(seed);
 }
 
-static std::vector<std::pair<Key, Value>> MakeData(std::size_t n) {
-    std::mt19937_64 rng(DATA_SEED);
+template <class Key>
+static Key MakeBaseKey(std::size_t i, std::uint64_t seed) {
+    if constexpr (std::is_same_v<Key, std::string>) {
+        (void)seed;
+        return "key_" + std::to_string(i);
+    } else if constexpr (std::is_same_v<Key, BigKey>) {
+        BigKey k{};
 
-    std::vector<Key> keys(n);
-    std::iota(keys.begin(), keys.end(), 0);
+        const std::uint64_t group = static_cast<std::uint64_t>(i / 16);
+        std::uint64_t x = Mix64(seed ^ group);
+
+        for (int j = 0; j < 7; ++j) {
+            x = Mix64(x + 0x9e3779b97f4a7c15ULL + static_cast<std::uint64_t>(j));
+            k.part[j] = x;
+        }
+
+        k.part[7] = static_cast<std::uint64_t>(i);
+        return k;
+    } else {
+        static_assert(std::is_integral_v<Key>, "Supported key types: integral types, std::string, BigKey");
+        (void)seed;
+        return static_cast<Key>(i);
+    }
+}
+
+template <class Key>
+static Key MakeInsertKey(std::size_t i, std::uint64_t seed) {
+    if constexpr (std::is_same_v<Key, std::string>) {
+        (void)seed;
+        return "ins_" + std::to_string(i);
+    } else if constexpr (std::is_same_v<Key, BigKey>) {
+        return MakeBaseKey<BigKey>(i, seed);
+    } else {
+        static_assert(std::is_integral_v<Key>, "Supported key types: integral types, std::string, BigKey");
+        (void)seed;
+        return static_cast<Key>(i);
+    }
+}
+
+template <class Key>
+static std::uint64_t KeyToU64(const Key& key) {
+    if constexpr (std::is_same_v<Key, std::string>) {
+        return static_cast<std::uint64_t>(std::hash<std::string>{}(key));
+    } else if constexpr (std::is_same_v<Key, BigKey>) {
+        std::uint64_t x = 0;
+        for (std::uint64_t p : key.part) {
+            x ^= Mix64(p + 0x9e3779b97f4a7c15ULL);
+        }
+        return x;
+    } else {
+        static_assert(std::is_integral_v<Key>, "Supported key types: integral types, std::string, BigKey");
+        return static_cast<std::uint64_t>(key);
+    }
+}
+
+template <class Key>
+static std::vector<std::pair<Key, Value>> MakeData(std::size_t n, std::uint64_t seed) {
+    std::mt19937_64 rng(seed);
+    std::uniform_real_distribution<Value> valueDist(0.0, 1'000'000.0);
+
+    std::vector<Key> keys;
+    keys.reserve(n);
+    for (std::size_t i = 0; i < n; ++i) {
+        keys.push_back(MakeBaseKey<Key>(i, seed));
+    }
+
     std::shuffle(keys.begin(), keys.end(), rng);
 
     std::vector<std::pair<Key, Value>> data;
     data.reserve(n);
-
     for (std::size_t i = 0; i < n; ++i) {
-        data.emplace_back(keys[i], static_cast<Value>(i));
+        data.emplace_back(std::move(keys[i]), valueDist(rng));
     }
 
     return data;
 }
 
-static std::vector<Key> MakeLookupKeys(const std::vector<std::pair<Key, Value>>& data,
-                                       std::size_t count,
-                                       std::uint64_t seed) {
+template <class Key>
+static std::vector<Key> MakeLookupKeys(
+        const std::vector<std::pair<Key, Value>>& data,
+        std::size_t count,
+        std::uint64_t seed
+) {
     std::mt19937_64 rng(seed);
     std::uniform_int_distribution<std::size_t> pick(0, data.size() - 1);
 
@@ -98,261 +191,262 @@ static std::vector<Key> MakeLookupKeys(const std::vector<std::pair<Key, Value>>&
     return keys;
 }
 
-static std::vector<std::pair<Key, Value>> MakeInsertData(std::size_t count, Key startKey) {
-    std::mt19937_64 rng(INSERT_SEED);
-    std::uniform_real_distribution<Value> valDist(0.0, 1'000'000.0);
+template <class Key>
+static std::vector<std::pair<Key, Value>> MakeInsertData(std::size_t count, std::uint64_t seed) {
+    std::mt19937_64 rng(seed);
+    std::uniform_real_distribution<Value> valueDist(0.0, 1'000'000.0);
 
     std::vector<std::pair<Key, Value>> inserts;
     inserts.reserve(count);
 
+    const std::size_t base = N * 10 + 1;
     for (std::size_t i = 0; i < count; ++i) {
-        inserts.emplace_back(startKey + static_cast<Key>(i), valDist(rng));
+        inserts.emplace_back(MakeInsertKey<Key>(base + i, seed), valueDist(rng));
     }
 
     return inserts;
 }
 
-template <class DictT>
-static double BenchInit(const std::vector<std::pair<Key, Value>>& data) {
-    return MeasureNs([&] {
-        DictT dict(data.begin(), data.end());
-        g_sink ^= static_cast<std::uint64_t>(dict.Count());
-    });
+template <class Key>
+static Scenario<Key> MakeScenario(std::uint64_t seed) {
+    Scenario<Key> s;
+    s.data = MakeData<Key>(N, Mix64(seed ^ 0x1111111111111111ULL));
+    s.readKeys = MakeLookupKeys<Key>(s.data, READ_OPS, Mix64(seed ^ 0x2222222222222222ULL));
+    s.containsKeys = MakeLookupKeys<Key>(s.data, READ_OPS, Mix64(seed ^ 0x3333333333333333ULL));
+    s.insertData = MakeInsertData<Key>(INSERT_OPS, Mix64(seed ^ 0x4444444444444444ULL));
+    return s;
 }
 
-template <>
-double BenchInit<std::map<Key, Value>>(const std::vector<std::pair<Key, Value>>& data) {
+template <class Key>
+static double BenchInitMap(const Scenario<Key>& s) {
     return MeasureNs([&] {
-        std::map<Key, Value> dict(data.begin(), data.end());
+        std::map<Key, Value> dict(s.data.begin(), s.data.end());
         g_sink ^= static_cast<std::uint64_t>(dict.size());
     });
 }
 
-template <class DictT>
-static double BenchRead(const std::vector<std::pair<Key, Value>>& data,
-                        const std::vector<Key>& keys) {
+template <class Key>
+static double BenchInitAvl(const Scenario<Key>& s) {
     return MeasureNs([&] {
-        DictT dict(data.begin(), data.end());
-
-        std::uint64_t local = 0;
-        for (Key k : keys) {
-            local += static_cast<std::uint64_t>(dict.GetValue(k));
-        }
-
-        g_sink ^= local;
-    });
-}
-
-template <>
-double BenchRead<std::map<Key, Value>>(const std::vector<std::pair<Key, Value>>& data,
-                                       const std::vector<Key>& keys) {
-    return MeasureNs([&] {
-        std::map<Key, Value> dict(data.begin(), data.end());
-
-        std::uint64_t local = 0;
-        for (Key k : keys) {
-            local += static_cast<std::uint64_t>(dict.at(k));
-        }
-
-        g_sink ^= local;
-    });
-}
-
-template <class DictT>
-static double BenchContains(const std::vector<std::pair<Key, Value>>& data,
-                            const std::vector<Key>& keys) {
-    return MeasureNs([&] {
-        DictT dict(data.begin(), data.end());
-
-        std::uint64_t local = 0;
-        for (Key k : keys) {
-            local += dict.ContainsKey(k) ? 1ULL : 0ULL;
-        }
-
-        g_sink ^= local;
-    });
-}
-
-template <>
-double BenchContains<std::map<Key, Value>>(const std::vector<std::pair<Key, Value>>& data,
-                                           const std::vector<Key>& keys) {
-    return MeasureNs([&] {
-        std::map<Key, Value> dict(data.begin(), data.end());
-
-        std::uint64_t local = 0;
-        for (Key k : keys) {
-            local += (dict.find(k) != dict.end()) ? 1ULL : 0ULL;
-        }
-
-        g_sink ^= local;
-    });
-}
-
-template <class DictT>
-static double BenchInsertBatch(const std::vector<std::pair<Key, Value>>& data,
-                               const std::vector<std::pair<Key, Value>>& inserts) {
-    DictT dict(data.begin(), data.end());
-
-    const double totalNs = MeasureNs([&] {
-        for (const auto& [k, v] : inserts) {
-            dict.InsertOrAssign(k, v);
-        }
+        AvlDictionary<Key, Value> dict(s.data.begin(), s.data.end());
         g_sink ^= static_cast<std::uint64_t>(dict.Count());
     });
-
-    return totalNs / static_cast<double>(inserts.size());
 }
 
-template <>
-double BenchInsertBatch<std::map<Key, Value>>(const std::vector<std::pair<Key, Value>>& data,
-                                              const std::vector<std::pair<Key, Value>>& inserts) {
-    std::map<Key, Value> dict(data.begin(), data.end());
+template <class Key>
+static double BenchReadMap(const Scenario<Key>& s) {
+    std::map<Key, Value> dict(s.data.begin(), s.data.end());
+
+    return MeasureNs([&] {
+        std::uint64_t local = 0;
+        for (const Key& k : s.readKeys) {
+            local += static_cast<std::uint64_t>(dict.at(k));
+        }
+        g_sink ^= local;
+    });
+}
+
+template <class Key>
+static double BenchReadAvl(const Scenario<Key>& s) {
+    AvlDictionary<Key, Value> dict(s.data.begin(), s.data.end());
+
+    return MeasureNs([&] {
+        std::uint64_t local = 0;
+        for (const Key& k : s.readKeys) {
+            local += static_cast<std::uint64_t>(dict.GetValue(k));
+        }
+        g_sink ^= local;
+    });
+}
+
+template <class Key>
+static double BenchContainsMap(const Scenario<Key>& s) {
+    std::map<Key, Value> dict(s.data.begin(), s.data.end());
+
+    return MeasureNs([&] {
+        std::uint64_t local = 0;
+        for (const Key& k : s.containsKeys) {
+            local += (dict.find(k) != dict.end()) ? 1ULL : 0ULL;
+        }
+        g_sink ^= local;
+    });
+}
+
+template <class Key>
+static double BenchContainsAvl(const Scenario<Key>& s) {
+    AvlDictionary<Key, Value> dict(s.data.begin(), s.data.end());
+
+    return MeasureNs([&] {
+        std::uint64_t local = 0;
+        for (const Key& k : s.containsKeys) {
+            local += dict.ContainsKey(k) ? 1ULL : 0ULL;
+        }
+        g_sink ^= local;
+    });
+}
+
+template <class Key>
+static double BenchInsertMap(const Scenario<Key>& s) {
+    std::map<Key, Value> dict(s.data.begin(), s.data.end());
 
     const double totalNs = MeasureNs([&] {
-        for (const auto& [k, v] : inserts) {
+        for (const auto& [k, v] : s.insertData) {
             dict.insert_or_assign(k, v);
         }
         g_sink ^= static_cast<std::uint64_t>(dict.size());
     });
 
-    return totalNs / static_cast<double>(inserts.size());
+    return totalNs / static_cast<double>(s.insertData.size());
 }
 
-template <class DictT>
-static double BenchIteration(const std::vector<std::pair<Key, Value>>& data) {
-    DictT dict(data.begin(), data.end());
+template <class Key>
+static double BenchInsertAvl(const Scenario<Key>& s) {
+    AvlDictionary<Key, Value> dict(s.data.begin(), s.data.end());
 
-    return MeasureNs([&] {
-        std::uint64_t local = 0;
-        for (const auto& [k, v] : dict) {
-            local += static_cast<std::uint64_t>(k) ^ static_cast<std::uint64_t>(v);
+    const double totalNs = MeasureNs([&] {
+        for (const auto& [k, v] : s.insertData) {
+            dict.InsertOrAssign(k, v);
         }
-        g_sink ^= local;
+        g_sink ^= static_cast<std::uint64_t>(dict.Count());
     });
+
+    return totalNs / static_cast<double>(s.insertData.size());
 }
 
-template <>
-double BenchIteration<std::map<Key, Value>>(const std::vector<std::pair<Key, Value>>& data) {
-    std::map<Key, Value> dict(data.begin(), data.end());
-
-    return MeasureNs([&] {
-        std::uint64_t local = 0;
-        for (const auto& [k, v] : dict) {
-            local += static_cast<std::uint64_t>(k) ^ static_cast<std::uint64_t>(v);
-        }
-        g_sink ^= local;
-    });
-}
-
-template <class DictT>
-static double BenchHeight(const std::vector<std::pair<Key, Value>>& data) {
-    DictT dict(data.begin(), data.end());
+template <class Key>
+static double BenchHeightAvl(const Scenario<Key>& s) {
+    AvlDictionary<Key, Value> dict(s.data.begin(), s.data.end());
     return static_cast<double>(dict.Height());
+}
+
+template <class Key>
+static double BenchIterMap(const Scenario<Key>& s) {
+    std::map<Key, Value> dict(s.data.begin(), s.data.end());
+
+    return MeasureNs([&] {
+        std::uint64_t local = 0;
+        for (const auto& [k, v] : dict) {
+            local += KeyToU64(k) ^ static_cast<std::uint64_t>(v);
+        }
+        g_sink ^= local;
+    });
+}
+
+template <class Key>
+static double BenchIterAvl(const Scenario<Key>& s) {
+    AvlDictionary<Key, Value> dict(s.data.begin(), s.data.end());
+
+    return MeasureNs([&] {
+        std::uint64_t local = 0;
+        for (const auto& [k, v] : dict) {
+            local += KeyToU64(k) ^ static_cast<std::uint64_t>(v);
+        }
+        g_sink ^= local;
+    });
+}
+
+template <class Key>
+static void RunForType(const char* typeName) {
+    std::cout << "\n=== Key type: " << typeName << " ===\n";
+
+    double initMapSum = 0.0;
+    double initAvlSum = 0.0;
+    double readMapSum = 0.0;
+    double readAvlSum = 0.0;
+    double containsMapSum = 0.0;
+    double containsAvlSum = 0.0;
+    double insertMapSum = 0.0;
+    double insertAvlSum = 0.0;
+    double heightSum = 0.0;
+    double iterMapSum = 0.0;
+    double iterAvlSum = 0.0;
+
+    for (int run = 0; run < RUNS; ++run) {
+        const auto seed = MakeRandomSeed();
+        const Scenario<Key> s = MakeScenario<Key>(seed);
+
+        initMapSum += BenchInitMap<Key>(s);
+        initAvlSum += BenchInitAvl<Key>(s);
+
+        readMapSum += BenchReadMap<Key>(s);
+        readAvlSum += BenchReadAvl<Key>(s);
+
+        containsMapSum += BenchContainsMap<Key>(s);
+        containsAvlSum += BenchContainsAvl<Key>(s);
+
+        insertMapSum += BenchInsertMap<Key>(s);
+        insertAvlSum += BenchInsertAvl<Key>(s);
+
+        heightSum += BenchHeightAvl<Key>(s);
+
+        iterMapSum += BenchIterMap<Key>(s);
+        iterAvlSum += BenchIterAvl<Key>(s);
+    }
+
+    const double initMap = initMapSum / RUNS;
+    const double initAvl = initAvlSum / RUNS;
+    const double readMap = readMapSum / RUNS;
+    const double readAvl = readAvlSum / RUNS;
+    const double containsMap = containsMapSum / RUNS;
+    const double containsAvl = containsAvlSum / RUNS;
+    const double insertMap = insertMapSum / RUNS;
+    const double insertAvl = insertAvlSum / RUNS;
+    const double heightAvg = heightSum / RUNS;
+    const double iterMap = iterMapSum / RUNS;
+    const double iterAvl = iterAvlSum / RUNS;
+
+    sep();
+    std::cout << "1. Initialization (construct from N elements)\n";
+    std::cout << "  std::map      : " << (initMap / 1e6) << " ms\n";
+    std::cout << "  AvlDictionary : " << (initAvl / 1e6) << " ms\n";
+    if (initAvl < initMap) faster("AvlDictionary", "std::map", initAvl, initMap);
+    else                   faster("std::map", "AvlDictionary", initMap, initAvl);
+
+    sep();
+    std::cout << "2. Read (GetValue on existing keys, random order)\n";
+    std::cout << "  std::map      : " << (readMap / READ_OPS) << " ns/op\n";
+    std::cout << "  AvlDictionary : " << (readAvl / READ_OPS) << " ns/op\n";
+    if (readAvl < readMap) faster("AvlDictionary", "std::map", readAvl, readMap);
+    else                   faster("std::map", "AvlDictionary", readMap, readAvl);
+
+    sep();
+    std::cout << "3. ContainsKey (all keys exist)\n";
+    std::cout << "  std::map      : " << (containsMap / READ_OPS) << " ns/op\n";
+    std::cout << "  AvlDictionary : " << (containsAvl / READ_OPS) << " ns/op\n";
+    if (containsAvl < containsMap) faster("AvlDictionary", "std::map", containsAvl, containsMap);
+    else                           faster("std::map", "AvlDictionary", containsMap, containsAvl);
+
+    sep();
+    std::cout << "4. Insert element (avg over " << INSERT_OPS << " inserts, fresh tree each run)\n";
+    std::cout << "  std::map      : " << insertMap << " ns/op\n";
+    std::cout << "  AvlDictionary : " << insertAvl << " ns/op\n";
+    if (insertAvl < insertMap) faster("AvlDictionary", "std::map", insertAvl, insertMap);
+    else                       faster("std::map", "AvlDictionary", insertMap, insertAvl);
+
+    sep();
+    std::cout << "5. Tree height\n";
+    const double avlTheory = std::ceil(1.45 * std::log2(static_cast<double>(N) + 1.0));
+    const double rbTheory  = std::ceil(2.0  * std::log2(static_cast<double>(N) + 1.0));
+    std::cout << "  AvlDictionary : " << heightAvg << " levels (avg)\n";
+    std::cout << "  AVL max (theory) : ~" << avlTheory << " levels for N=" << N << "\n";
+    std::cout << "  std::map (RB max): ~" << rbTheory << " levels for N=" << N << "\n";
+
+    sep();
+    std::cout << "6. Full in-order iteration\n";
+    std::cout << "  std::map      : " << (iterMap / N) << " ns/op\n";
+    std::cout << "  AvlDictionary : " << (iterAvl / N) << " ns/op\n";
+    if (iterAvl < iterMap) faster("AvlDictionary", "std::map", iterAvl, iterMap);
+    else                   faster("std::map", "AvlDictionary", iterMap, iterAvl);
 }
 
 int main() {
     std::cout << std::fixed << std::setprecision(2);
-    std::cout << "\n=== AvlDictionary vs std::map, N=" << N << ", runs=" << RUNS << " ===\n\n";
+    std::cout << "\n=== AvlDictionary vs std::map, runs=" << RUNS << " ===\n";
 
-    const auto data = MakeData(N);
-    const auto readKeys = MakeLookupKeys(data, READ_OPS, READ_SEED);
-    const auto containsKeys = MakeLookupKeys(data, READ_OPS, CONTAINS_SEED);
-    const auto insertData = MakeInsertData(INSERT_OPS, static_cast<Key>(N * 10 + 1));
-
-    // 1. Initialization
-    sep();
-    std::cout << "1. Initialization (construct from N elements)\n";
-
-    const double mapInit = AverageNs(RUNS, [&] {
-        return BenchInit<std::map<Key, Value>>(data);
-    });
-    const double avlInit = AverageNs(RUNS, [&] {
-        return BenchInit<AvlDictionary<Key, Value>>(data);
-    });
-
-    std::cout << "  std::map      : " << (mapInit / 1e6) << " ms\n";
-    std::cout << "  AvlDictionary : " << (avlInit / 1e6) << " ms\n";
-    if (avlInit < mapInit) faster("AvlDictionary", "std::map", avlInit, mapInit);
-    else                   faster("std::map", "AvlDictionary", mapInit, avlInit);
-
-    // 2. Read
-    sep();
-    std::cout << "2. Read (GetValue on existing keys, random order)\n";
-
-    const double mapRead = AverageNs(RUNS, [&] {
-        return BenchRead<std::map<Key, Value>>(data, readKeys);
-    });
-    const double avlRead = AverageNs(RUNS, [&] {
-        return BenchRead<AvlDictionary<Key, Value>>(data, readKeys);
-    });
-
-    std::cout << "  std::map      : " << (mapRead / READ_OPS) << " ns/op\n";
-    std::cout << "  AvlDictionary : " << (avlRead / READ_OPS) << " ns/op\n";
-    if (avlRead < mapRead) faster("AvlDictionary", "std::map", avlRead, mapRead);
-    else                   faster("std::map", "AvlDictionary", mapRead, avlRead);
-
-    // 3. ContainsKey
-    sep();
-    std::cout << "3. ContainsKey (all keys exist)\n";
-
-    const double mapContains = AverageNs(RUNS, [&] {
-        return BenchContains<std::map<Key, Value>>(data, containsKeys);
-    });
-    const double avlContains = AverageNs(RUNS, [&] {
-        return BenchContains<AvlDictionary<Key, Value>>(data, containsKeys);
-    });
-
-    std::cout << "  std::map      : " << (mapContains / READ_OPS) << " ns/op\n";
-    std::cout << "  AvlDictionary : " << (avlContains / READ_OPS) << " ns/op\n";
-    if (avlContains < mapContains) faster("AvlDictionary", "std::map", avlContains, mapContains);
-    else                           faster("std::map", "AvlDictionary", mapContains, avlContains);
-
-    // 4. Insert element
-    sep();
-    std::cout << "4. Insert element (avg over " << INSERT_OPS << " inserts, fresh tree each run)\n";
-
-    const double mapInsert = AverageNs(RUNS, [&] {
-        return BenchInsertBatch<std::map<Key, Value>>(data, insertData);
-    });
-    const double avlInsert = AverageNs(RUNS, [&] {
-        return BenchInsertBatch<AvlDictionary<Key, Value>>(data, insertData);
-    });
-
-    std::cout << "  std::map      : " << mapInsert << " ns/op\n";
-    std::cout << "  AvlDictionary : " << avlInsert << " ns/op\n";
-    if (avlInsert < mapInsert) faster("AvlDictionary", "std::map", avlInsert, mapInsert);
-    else                       faster("std::map", "AvlDictionary", mapInsert, avlInsert);
-
-    // 5. Height
-    sep();
-    std::cout << "5. Tree height\n";
-
-    const double avlHeight = AverageValue(RUNS, [&] {
-        return BenchHeight<AvlDictionary<Key, Value>>(data);
-    });
-
-    const double avlTheory = std::ceil(1.45 * std::log2(static_cast<double>(N) + 1.0));
-    const double rbTheory  = std::ceil(2.0  * std::log2(static_cast<double>(N) + 1.0));
-
-    std::cout << "  AvlDictionary : " << avlHeight << " levels (avg)\n";
-    std::cout << "  AVL max (theory) : ~" << avlTheory << " levels for N=" << N << "\n";
-    std::cout << "  std::map (RB max): ~" << rbTheory << " levels for N=" << N << "\n";
-
-    // 6. Iteration
-    sep();
-    std::cout << "6. Full in-order iteration\n";
-
-    const double mapIter = AverageNs(RUNS, [&] {
-        return BenchIteration<std::map<Key, Value>>(data);
-    });
-    const double avlIter = AverageNs(RUNS, [&] {
-        return BenchIteration<AvlDictionary<Key, Value>>(data);
-    });
-
-    std::cout << "  std::map      : " << (mapIter / 1e6) << " ms\n";
-    std::cout << "  AvlDictionary : " << (avlIter / 1e6) << " ms\n";
-    if (avlIter < mapIter) faster("AvlDictionary", "std::map", avlIter, mapIter);
-    else                   faster("std::map", "AvlDictionary", mapIter, avlIter);
+    RunForType<int>("int");
+    RunForType<long long>("long long");
+    RunForType<std::string>("std::string");
+    RunForType<BigKey>("BigKey (64 bytes)");
 
     sep();
     std::cout << "\n";
