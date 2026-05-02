@@ -67,13 +67,15 @@ bool CuckooHashDictionary<TKey, TValue>::_insert(TKey key, TValue value, const b
             s1.Item.second = value;
             return true;
         }
+        throw std::invalid_argument("Key already exists");
     }
 
-    if (s1.Exists && s1.Item.first == key) {
+    if (s2.Exists && s2.Item.first == key) {
         if (allowOverwrite) {
             s2.Item.second = value;
             return true;
         }
+        throw std::invalid_argument("Key already exists");
     }
 
     const auto maxKicks = _getMaxKicks();
