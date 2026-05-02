@@ -4,12 +4,12 @@
 
 | Метод            | Сложность | Аморт. сложность | Пояснение |
 |------------------|-----------|------------------|-----------|
-| GetValue         | O(1)      | O(1)             | `_findIndex` → линейный проход от стартового индекса; O(1) в среднем при низком коэффициенте загрузки; O(n) в худшем случае |
-| InsertOrAssign   | O(1)      | O(1)             | `_ensureCapacity` + `_findSlotForInsert` → O(1) в среднем; рехэширование добавляет O(1) амортизированно |
-| ContainsKey      | O(1)      | O(1)             | Делегирует в `_findIndex` → O(1) в среднем |
-| TryGetValue      | O(1)      | O(1)             | `_findIndex` → O(1) в среднем; при нахождении копирует значение |
-| Add              | O(1)      | O(1)             | `_ensureCapacity` → O(1) аморт. + `_findSlotForInsert` → O(1) в среднем; бросает `std::invalid_argument` при дубликате |
-| Remove           | O(1)      | O(1)             | `_findIndex` → O(1) в среднем; запись tombstone — O(1); физического сдвига нет |
+| GetValue         | O(n)      | O(1)             | `_findIndex` → линейный проход от стартового индекса; O(1) в среднем при низком коэффициенте загрузки; O(n) в худшем случае |
+| InsertOrAssign   | O(n)      | O(1)             | `_ensureCapacity` + `_findSlotForInsert` → O(1) в среднем; рехэширование добавляет O(1) амортизированно |
+| ContainsKey      | O(n)      | O(1)             | Делегирует в `_findIndex` → O(1) в среднем |
+| TryGetValue      | O(n)      | O(1)             | `_findIndex` → O(1) в среднем; при нахождении копирует значение |
+| Add              | O(n)      | O(1)             | `_ensureCapacity` → O(1) аморт. + `_findSlotForInsert` → O(1) в среднем; бросает `std::invalid_argument` при дубликате |
+| Remove           | O(n)      | O(1)             | `_findIndex` → O(1) в среднем; запись tombstone — O(1); физического сдвига нет |
 | Clear            | O(m)      | O(m)             | `vector::clear` + `resize(8)` — уничтожение всех `m` ячеек таблицы |
 | Count            | O(1)      | O(1)             | Возвращает поле `_count` |
 | initializer_list | O(n)      | O(n)             | `n` вызовов `Add` → O(1) каждый; суммарное рехэширование не превышает O(n) |
