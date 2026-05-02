@@ -77,8 +77,6 @@ void ChainingHashDictionary<TKey, TValue, Hash>::_ensureCapacity()
     }
 }
 
-// ===== Методы =====
-
 template <typename TKey, typename TValue, typename Hash>
 bool ChainingHashDictionary<TKey, TValue, Hash>::ContainsKey(const TKey &key) const
 {

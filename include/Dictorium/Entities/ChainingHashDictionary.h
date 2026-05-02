@@ -107,6 +107,22 @@ class ChainingHashDictionary : public IDictionary<TKey, TValue>
 
     const TValue &GetValue(const TKey &key) const override;
 
+    // Вернуть кол-во ведер
+    int BucketCount() const
+    {
+        return _buckets.size();
+    }
+
+    auto BucketBegin(size_t bucket_index) const
+    {
+        return _buckets[bucket_index].begin();
+    }
+
+    auto BucketEnd(size_t bucket_index) const
+    {
+        return _buckets[bucket_index].end();
+    }
+
   public:
     class Iterator
     {
