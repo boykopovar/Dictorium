@@ -6,5 +6,6 @@
 #include "Entities/LinearDictionary.h"
 #include "Entities/PerfectHashDictionary.h"
 #include "Entities/Console.h"
+#include "Entities/QuadraticProbingDictionary.h"
 
 #endif //DICTORIUM_H
