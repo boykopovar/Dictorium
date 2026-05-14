@@ -7,6 +7,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(DICTORIUM_SOURCES
        src/dtr.cpp
+        include/Dictorium/Entities/RedBlackTree.h
 )
 
 add_library(Dictorium STATIC
