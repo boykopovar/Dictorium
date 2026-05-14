@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <stdexcept>
+#include <cmath>
 #include "Dictorium/Contracts/Concepts.h"
 #include "CuckooHashDictionary/CuckooHashIterator.tpp"
 
