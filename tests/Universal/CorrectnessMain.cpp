@@ -16,6 +16,7 @@ template<typename TKey, typename TValue> using DoubleHash2 = DoubleHashDictionar
 
 #define DTR_DICT_LIST(X) \
     X(AvlDictionary) \
+    X(RedBlackTree) \
     X(SkipListDictionary) \
     X(LinearDictionary) \
     X(ChainingHash2) \
