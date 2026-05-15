@@ -42,5 +42,6 @@ static inline uint64_t FastRange(uint64_t a, uint64_t b)
 #include "Entities/LinearProbingDictionary.h"
 #include "Entities/PerfectHashDictionary.h"
 #include "Entities/QuadraticProbingDictionary.h"
+#include "Entities/SkipListDictionary.h"
 
 #endif // DICTORIUM_H
