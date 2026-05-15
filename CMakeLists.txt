@@ -41,3 +41,9 @@ add_executable(AvlTest
         tests/Utils/TestUtils.cpp
 )
 target_link_libraries(AvlTest Dictorium)
+
+add_executable(SkipListTest
+        tests/SkipListTest.cpp
+        tests/Utils/TestUtils.cpp
+)
+target_link_libraries(SkipListTest Dictorium)
