@@ -307,10 +307,26 @@ bool DoubleHashDictionary<TKey, TValue, Hash1, Hash2>::_isPrime(size_t n)
 template <typename TKey, typename TValue, typename Hash1, typename Hash2>
 size_t DoubleHashDictionary<TKey, TValue, Hash1, Hash2>::_nextPrime(size_t n)
 {
-    while (!_isPrime(n))
+    if (n <= 2)
+        return 2;
+    if (n % 2 == 0)
         ++n;
 
-    return n;
+    while (true)
+    {
+        bool prime = true;
+        for (size_t i = 3; i * i <= n; i += 2)
+        {
+            if (n % i == 0)
+            {
+                prime = false;
+                break;
+            }
+        }
+        if (prime)
+            return n;
+        n += 2;
+    }
 }
 
 } // namespace dtr

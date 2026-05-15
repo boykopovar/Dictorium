@@ -253,10 +253,26 @@ bool QuadraticProbingDictionary<TKey, TValue, Hash>::_isPrime(size_t n) const
 template <typename TKey, typename TValue, typename Hash>
 size_t QuadraticProbingDictionary<TKey, TValue, Hash>::_nextPrime(size_t n) const
 {
-    while (!_isPrime(n))
+    if (n <= 2)
+        return 2;
+    if (n % 2 == 0)
         ++n;
 
-    return n;
+    while (true)
+    {
+        bool prime = true;
+        for (size_t i = 3; i * i <= n; i += 2)
+        {
+            if (n % i == 0)
+            {
+                prime = false;
+                break;
+            }
+        }
+        if (prime)
+            return n;
+        n += 2;
+    }
 }
 
 } // namespace dtr
