@@ -62,8 +62,8 @@ void CuckooHashDictionary<TKey, TValue>::Clear() {
     _seed1 = DTR_CUCKOO_SEED1;
     _seed2 = DTR_CUCKOO_SEED2;
 
-    _table1.clear();
-    _table2.clear();
+    _table1.assign(DTR_CUCKOO_INIT_CAPACITY, {});
+    _table2.assign(DTR_CUCKOO_INIT_CAPACITY, {});
 }
 
 }

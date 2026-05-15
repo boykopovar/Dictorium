@@ -24,10 +24,17 @@ add_executable(DictoriumMain
 target_link_libraries(DictoriumMain Dictorium)
 
 add_executable(PerfTest
-        tests/PerfTest.cpp
+        tests/Universal/PerfTest.cpp
         tests/Utils/TestUtils.cpp
 )
 target_link_libraries(PerfTest Dictorium)
+
+add_executable(CorrectnessTest
+        tests/Universal/CorrectnessMain.cpp
+        tests/Utils/TestUtils.cpp
+)
+target_link_libraries(CorrectnessTest Dictorium)
+
 
 add_executable(ChainingHashSpeed
         tests/ChainingTest.cpp
