@@ -81,6 +81,13 @@ namespace dtr {
             delete _nil;
         }
 
+        template<typename TIter>
+        RedBlackTree(TIter first, TIter last) : RedBlackTree() {
+            for (; first != last; ++first) {
+                this->Add(first->first, first->second);
+            }
+        }
+
         Iterator begin() const { return Iterator(_root, _nil); }
         Iterator end() const { return Iterator(); }
 
