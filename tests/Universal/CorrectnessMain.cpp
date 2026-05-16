@@ -25,7 +25,8 @@ template<typename TKey, typename TValue> using DoubleHash2 = DoubleHashDictionar
     X(RobinHood2) \
     X(DoubleHash2) \
     X(CuckooHashDictionary) \
-    X(PerfectHashDictionary)
+    X(PerfectHashDictionary) \
+    X(TreapDictionary)
 
 #define DTR_CORRECT_TEST(results, Dict, Key) \
     (results).push_back(start_correctness_test<Dict, Key>(DTR_STR(Dict), 10'000, 8))

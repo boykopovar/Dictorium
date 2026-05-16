@@ -30,7 +30,7 @@ static inline uint64_t FastRange(uint64_t a, uint64_t b)
     return static_cast<uint64_t>((static_cast<__uint128_t>(a) * b) >> 64);
 #endif
 }
-} // namespace dtr
+}
 
 #include "Contracts/Contracts.h"
 #include "Entities/AvlDictionary.h"
@@ -47,6 +47,7 @@ static inline uint64_t FastRange(uint64_t a, uint64_t b)
 #include "Entities/Console.h"
 #include "Entities/RobinHoodHashDictionary.h"
 #include "Entities/QuadraticProbingDictionary.h"
+#include "Entities/TreapDictionary.h"
 #include "Entities/SkipListDictionary.h"
 
 #endif // DICTORIUM_H
