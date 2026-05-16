@@ -40,3 +40,9 @@ add_executable(AvlTest
         tests/Utils/TestUtils.cpp
 )
 target_link_libraries(AvlTest Dictorium)
+
+add_executable(TreapTest
+        tests/TreapTest.cpp
+        tests/Utils/TestUtils.cpp
+)
+target_link_libraries(TreapTest Dictorium)
