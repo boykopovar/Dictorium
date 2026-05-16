@@ -26,6 +26,13 @@ public:
         }
     }
 
+    template<typename TIter>
+    LinearDictionary(TIter first, TIter last) {
+        for (; first != last; ++first) {
+            (*this).Add(first->first, first->second);
+        }
+    }
+
     /// <summary>
     /// Проверяет наличие ключа линейным поиском.
     /// Сравнение выполняется через operator==.

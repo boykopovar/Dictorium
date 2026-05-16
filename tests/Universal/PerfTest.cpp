@@ -1,12 +1,12 @@
 #include <unordered_map>
 
 #include "Dictorium/Dictorium.h"
-#include "Utils/TestUtils.h"
+#include "../Utils/TestUtils.h"
 
 using namespace dtr;
 
 #define DTR_TEST_STL_UNORDERED_MAP std::unordered_map
-#define DTR_TEST_DTR_CUCKOO_HASH CuckooHashDictionary
+#define DTR_TEST_DTR_CUCKOO_HASH PerfectHashDictionary
 
 int main() {
     start_perf_compare<

@@ -7,6 +7,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(DICTORIUM_SOURCES
        src/dtr.cpp
+        include/Dictorium/Entities/RedBlackTree.h
 )
 
 add_library(Dictorium STATIC
@@ -24,10 +25,17 @@ add_executable(DictoriumMain
 target_link_libraries(DictoriumMain Dictorium)
 
 add_executable(PerfTest
-        tests/PerfTest.cpp
+        tests/Universal/PerfTest.cpp
         tests/Utils/TestUtils.cpp
 )
 target_link_libraries(PerfTest Dictorium)
+
+add_executable(CorrectnessTest
+        tests/Universal/CorrectnessMain.cpp
+        tests/Utils/TestUtils.cpp
+)
+target_link_libraries(CorrectnessTest Dictorium)
+
 
 add_executable(ChainingHashSpeed
         tests/ChainingTest.cpp
@@ -46,3 +54,9 @@ add_executable(TreapTest
         tests/Utils/TestUtils.cpp
 )
 target_link_libraries(TreapTest Dictorium)
+
+add_executable(SkipListTest
+        tests/SkipListTest.cpp
+        tests/Utils/TestUtils.cpp
+)
+target_link_libraries(SkipListTest Dictorium)
