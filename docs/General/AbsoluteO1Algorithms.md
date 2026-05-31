@@ -34,7 +34,7 @@ $$\text{pos}_0 = h_1(H, m),\quad \text{pos}_1 = h_2(H', m),\quad \text{pos}_2 = 
 ---
 
 **Процедура 2.1.1. Hash1 (внутренняя)**
-```
+```basic
 01: Hash1(stdHash, tableSize)
 02:     return FastRange(stdHash * seed1, tableSize)
 ```
@@ -56,7 +56,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 ---
 
 **Процедура 2.1.2. Hash2 (внутренняя)**
-```
+```basic
 01: Hash2(stdHash, tableSize)
 02:     hash = (stdHash xor (stdHash >> 30)) * seed2
 03:     return FastRange(hash, tableSize)
@@ -77,7 +77,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 ---
 
 **Процедура 2.1.3. Get Max Kicks (внутренняя)**
-```
+```basic
 01: GetMaxKicks()
 02:     if Table1 is empty then return 1
 03:     return floor(KICKS_FACTOR * log2(Table1.size))
@@ -100,7 +100,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(\log n)$$
 ---
 
 **Процедура 2.1.4. Build (внутренняя)**
-```
+```basic
 01: BuildImpl(begin, end, size)
 02:     initSize = max(INIT_CAPACITY, size)
 03:     Table1.assign(initSize, ∅)
@@ -131,7 +131,7 @@ $$W(n) = A(n) = \Theta(n), \quad B(n) = \Theta(1) \text{ (при } n = 0\text{)}
 ---
 
 **Процедура 2.1.5. Insert (внутренняя)**
-```
+```basic
 01: InsertImpl(key, value, allowOverwrite)
 02:     size = Table1.size
 03:     H = StdHash(key)
@@ -196,7 +196,7 @@ $$A(n) = \Theta(1) \text{ (при фиксированном ключе)}$$
 ---
 
 **Процедура 2.1.6. Rehash**
-```
+```basic
 01: RehashImpl(newTableSize)
 02:     items = []
 03:     for each slot in Table1 do
@@ -245,7 +245,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(n)$$
 ---
 
 **Процедура 2.1.7. Contains Key**
-```
+```basic
 01: ContainsKeyImpl(key)
 02:     H = StdHash(key)
 03:     size = Table1.size
@@ -292,7 +292,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 ---
 
 **Процедура 2.1.8. Try Get Value**
-```
+```basic
 01: TryGetValueImpl(key, value)
 02:     H = StdHash(key)
 03:     size = Table1.size
@@ -322,7 +322,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 ---
 
 **Процедура 2.1.9. Get Value**
-```
+```basic
 01: GetValueImpl(key)
 02:     H = StdHash(key)
 03:     size = Table1.size
@@ -345,7 +345,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 ---
 
 **Процедура 2.1.10. Add**
-```
+```basic
 01: AddImpl(key, value)
 02:     if Table1 is empty then
 03:         Table1.assign(INIT_CAPACITY, ∅);  Table2.assign(INIT_CAPACITY, ∅)
@@ -379,7 +379,7 @@ $$A(n) = \Theta(1) \text{ (ожидаемая амортизированная)}
 ---
 
 **Процедура 2.1.11. Insert Or Assign**
-```
+```basic
 01: InsertOrAssignImpl(key, value)
 02:     if Table1 is empty then
 03:         Table1.assign(INIT_CAPACITY, ∅);  Table2.assign(INIT_CAPACITY, ∅)
@@ -402,7 +402,7 @@ $$W(n) = \Theta(n), \quad B(n) = \Theta(1), \quad A(n) = \Theta(1) \text{ (ож�
 ---
 
 **Процедура 2.1.12. Remove**
-```
+```basic
 01: RemoveImpl(key)
 02:     H = StdHash(key)
 03:     size = Table1.size
@@ -433,7 +433,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 ---
 
 **Процедура 2.1.13. Clear**
-```
+```basic
 01: ClearImpl()
 02:     KeysCount = 0
 03:     seed1 = SEED1_INIT;  seed2 = SEED2_INIT
@@ -459,7 +459,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 ---
 
 **Процедура 2.1.14. Count**
-```
+```basic
 01: CountImpl()
 02:     return KeysCount
 ```
@@ -510,7 +510,7 @@ $$h(H, \text{seed}, m) = \bigl((\text{seed} \cdot \text{SALT} + 1) \cdot H + \te
 ---
 
 **Процедура 2.2.1. Hash Raw (внутренняя)**
-```
+```basic
 01: HashRaw(stdHash, seed, tableSize)
 02:     return ((seed * SALT + 1) * stdHash + seed) mod tableSize
 ```
@@ -530,7 +530,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 ---
 
 **Процедура 2.2.2. Find Index (внутренняя)**
-```
+```basic
 01: FindIndexImpl(key)
 02:     H = StdHash(key)
 03:     globalIndex = HashRaw(H, globalSeed, tableSize)
@@ -567,7 +567,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 ---
 
 **Процедура 2.2.3. Find Seed (внутренняя)**
-```
+```basic
 01: FindSeed(bucket, tableSize)
 02:     occupied = array[tableSize] of false
 03:
@@ -620,7 +620,7 @@ $$\Rightarrow W(b) = O(\mathtt{MAX\_ATTEMPTS} \cdot b^2) = \Theta(b^2), \quad A(
 ---
 
 **Процедура 2.2.4. Build (внутренняя)**
-```
+```basic
 01: BuildImpl(begin, end, size)
 02:     count = size;  tableSize = size
 03:     bucketsList = array[tableSize] of empty lists
@@ -722,7 +722,7 @@ $$W(n) = O(n \cdot \mathtt{MAX\_ATTEMPTS}^2) = O(n) \text{ (с высокой в
 ---
 
 **Процедура 2.2.5. Contains Key**
-```
+```basic
 01: ContainsKeyImpl(key)
 02:     flatIndex = FindIndexImpl(key)
 03:     if flatIndex = -1 then return false
@@ -747,7 +747,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 ---
 
 **Процедура 2.2.6. Try Get Value**
-```
+```basic
 01: TryGetValueImpl(key, value)
 02:     flatIndex = FindIndexImpl(key)
 03:     if flatIndex = -1 then return false
@@ -767,7 +767,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 ---
 
 **Процедура 2.2.7. Get Value**
-```
+```basic
 01: GetValueImpl(key)
 02:     flatIndex = FindIndexImpl(key)
 03:     if flatIndex = -1 then raise KeyNotFoundException
@@ -785,7 +785,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 ---
 
 **Процедура 2.2.8. Add**
-```
+```basic
 01: AddImpl(key, value)
 02:     flatIndex = FindIndexImpl(key)
 03:     if flatIndex ≠ -1 then
@@ -819,7 +819,7 @@ $$W(n) = A(n) = \Theta(n) \text{ (перестройка совершенног�
 ---
 
 **Процедура 2.2.9. Insert Or Assign**
-```
+```basic
 01: InsertOrAssignImpl(key, value)
 02:     flatIndex = FindIndexImpl(key)
 03:     if flatIndex ≠ -1 then
@@ -847,7 +847,7 @@ $$B(n) = \Theta(1), \quad W(n) = A(n) = \Theta(n)$$
 ---
 
 **Процедура 2.2.10. Remove**
-```
+```basic
 01: RemoveImpl(key)
 02:     flatIndex = FindIndexImpl(key)
 03:     if flatIndex = -1 then return false
@@ -869,7 +869,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 ---
 
 **Процедура 2.2.11. Clear**
-```
+```basic
 01: ClearImpl()
 02:     for each slot in values do
 03:         slot.exists = false
@@ -891,7 +891,7 @@ $$W(n) = B(n) = A(n) = \Theta(n)$$
 ---
 
 **Процедура 2.2.12. Count**
-```
+```basic
 01: CountImpl()
 02:     return count
 ```
@@ -949,7 +949,6 @@ $$W(n) = B(n) = A(n) = \Theta(1)$$
 | `double`      | 1 000 000 | —           |           860,592 мс |        919,791 мс | `unordered_map` ×1,07  |               306 нс |            203 нс | `CuckooHash` **×1,51**   |
 | `double`      |     1 000 | —           |            1,8202 мс |         2,8278 мс | `unordered_map` ×1,55  |                ~0 нс |             ~0 нс | `CuckooHash` **×2,17**\* |
 
-> \* При столь малых временах результат нестабилен из-за джиттера таймера; отношение приведено ориентировочно.
 
 ---
 
@@ -978,4 +977,4 @@ $$W(n) = B(n) = A(n) = \Theta(1)$$
 
 *Поведение при большом ключе (`len = 1000`).* При длинных строках доминирует стоимость `std::hash<std::string>`, одинаковая для всех структур. Разрыв в Read сокращается (×1,39 вместо ×2,55 для `len = 10`), что согласуется с теоретическим выводом: при фиксированном $|key|$ поиск занимает $\Theta(|key|)$, и именно эта составляющая ограничивает возможный выигрыш.
 
-*Вывод.* `CuckooHashDictionary` и `PerfectHashDictionary` обеспечивают **строгий** $O(1)$ поиск в худшем случае — в отличие от всех реализаций на основе открытой адресации и открытого хеширования из разделов 1.3–1.7, у которых $W(n) = \Theta(n)$. Это свойство делает их предпочтительными для сценариев с жёсткими требованиями к латентности, где недопустимы редкие, но дорогостоящие вырождённые случаи. Цена — более высокое время построения и, для `PerfectHash`, ограниченная поддержка мутирующих операций с новыми ключами.
+*Вывод.* `CuckooHashDictionary` и `PerfectHashDictionary` обеспечивают **строгий** $O(1)$ поиск в худшем случае — в отличие от всех реализаций на основе открытой адресации и открытого хеширования из разделов 1.3–1.7, у которых $W(n) = \Theta(n)$. Это свойство делает их предпочтительными для сценариев с жёсткими требованиями к времени выполнения, где недопустимы редкие, но дорогостоящие вырождённые случаи. Цена — более высокое время построения и, для `PerfectHash`, ограниченная поддержка мутирующих операций с новыми ключами.
