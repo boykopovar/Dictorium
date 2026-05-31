@@ -85,11 +85,11 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 
 **Шаги алгоритма:**
 1. Если таблица пуста — возвращается 1 (защита от $\log 0$).
-2. Иначе возвращается $\lfloor \lambda \cdot \log_2 m \rfloor$, где $\lambda = \texttt{KICKS\_FACTOR}$, $m = \texttt{Table1.size}$.
+2. Иначе возвращается $\lfloor \lambda \cdot \log_2 m \rfloor$, где $\lambda$ = `KICKS_FACTOR`, $m$ = `Table1.size`.
 
 **Анализ сложности:**
 
-$$m = \text{Table1.size} = \Theta(n) \Rightarrow \log_2 m = \Theta(\log n)$$
+$$m = \mathrm{Table1.size} = \Theta(n) \Rightarrow \log_2 m = \Theta(\log n)$$
 
 $$T(n) = c_1 \log n + c_2 = \Theta(\log n)$$
 
