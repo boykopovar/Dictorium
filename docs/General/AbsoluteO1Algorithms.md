@@ -1,8 +1,10 @@
+# Глава 2. Структуры с гарантированно константным временем поиска
+
 ## СОДЕРЖАНИЕ
 
-- [1.9 Открытая адресация. Кукушкино хеширование](#19-открытая-адресация-кукушкино-хеширование)
-- [1.10 Совершенное хеширование](#110-Совершенное-хеширование)
-- [1.11 Расширенное тестирование производительности](#111-расширенное-тестирование-производительности)
+- [2.1 Кукушкино хеширование](#21-кукушкино-хеширование)
+- [2.2 Совершенное хеширование](#22-совершенное-хеширование)
+- [2.3 Расширенное тестирование производительности](#23-расширенное-тестирование-производительности)
 
 ---
 
@@ -11,7 +13,7 @@
 
 ---
 
-### 1.9 Открытая адресация. Кукушкино хеширование
+### 2.1 Кукушкино хеширование
 
 В рамках данной работы была разработана структура данных `CuckooHashDictionary<TKey, TValue>`, реализующая ассоциативный массив на основе хэш-таблицы с двухтабличным кукушкиным хешированием (Cuckoo Hashing).
 
@@ -19,19 +21,19 @@
 
 Хеш-функции основаны на умножении Кнута:
 
-$$h_1(H,\, m) = \left\lfloor \frac{H \cdot \mathtt{seed}_1 \bmod 2^{64}}{2^{64}} \cdot m \right\rfloor, \qquad h_2(H,\, m) = \left\lfloor \frac{\bigl((H \oplus (H \gg 30)) \cdot \mathtt{seed}_2 \bmod 2^{64}\bigr)}{2^{64}} \cdot m \right\rfloor,$$
+$$h_1(H, m) = \left\lfloor \frac{H \cdot \mathtt{seed}_1 \bmod 2^{64}}{2^{64}} \cdot m \right\rfloor, \qquad h_2(H, m) = \left\lfloor \frac{\bigl((H \oplus (H \gg 30)) \cdot \mathtt{seed}_2 \bmod 2^{64}\bigr)}{2^{64}} \cdot m \right\rfloor,$$
 
 где $H = \texttt{std::hash<TKey>\{\}(key)}$ — стандартный хеш ключа, $m$ — текущий размер каждой таблицы.
 
 Последовательность проб при кикинге:
 
-$$\text{pos}_0 = h_1(H,\, m),\quad \text{pos}_1 = h_2(H',\, m),\quad \text{pos}_2 = h_1(H'',\, m),\ldots$$
+$$\text{pos}_0 = h_1(H, m),\quad \text{pos}_1 = h_2(H', m),\quad \text{pos}_2 = h_1(H'', m),\ldots$$
 
 где штрих означает пересчёт $H$ после перемещения выбитого ключа.
 
 ---
 
-**Процедура 1.9.1. Hash1 (внутренняя)**
+**Процедура 2.1.1. Hash1 (внутренняя)**
 ```
 01: Hash1(stdHash, tableSize)
 02:     return FastRange(stdHash * seed1, tableSize)
@@ -53,7 +55,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 
 ---
 
-**Процедура 1.9.2. Hash2 (внутренняя)**
+**Процедура 2.1.2. Hash2 (внутренняя)**
 ```
 01: Hash2(stdHash, tableSize)
 02:     hash = (stdHash xor (stdHash >> 30)) * seed2
@@ -74,7 +76,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 
 ---
 
-**Процедура 1.9.3. Get Max Kicks (внутренняя)**
+**Процедура 2.1.3. Get Max Kicks (внутренняя)**
 ```
 01: GetMaxKicks()
 02:     if Table1 is empty then return 1
@@ -97,7 +99,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(\log n)$$
 
 ---
 
-**Процедура 1.9.4. Build (внутренняя)**
+**Процедура 2.1.4. Build (внутренняя)**
 ```
 01: BuildImpl(begin, end, size)
 02:     initSize = max(INIT_CAPACITY, size)
@@ -118,17 +120,17 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(\log n)$$
 
 **Анализ сложности:**
 
-Обозначим $n = \mathtt{size}$ — количество вставляемых элементов. Из процедуры 1.9.8 (Add) следует $A_{\mathrm{Add}} = \Theta(1)$ амортизированно на одну вставку. Суммируя по всем $n$ элементам:
+Обозначим $n = \mathtt{size}$ — количество вставляемых элементов. Из процедуры 2.1.10 (Add) следует $A_{\mathrm{Add}} = \Theta(1)$ амортизированно на одну вставку. Суммируя по всем $n$ элементам:
 
 $$T(n) = T_{\mathrm{init}} + \sum_{i=1}^{n} T_{\mathrm{Add}_i} = \Theta(n) + n \cdot \Theta(1) = \Theta(n)$$
 
-где $T_{\mathrm{init}} = c \cdot \mathtt{initSize} = c \cdot \max(\mathtt{INIT\_CAPACITY},\, n) = \Theta(n)$.
+где $T_{\mathrm{init}} = c \cdot \mathtt{initSize} = c \cdot \max(\mathtt{INIT\_CAPACITY}, n) = \Theta(n)$.
 
 $$W(n) = A(n) = \Theta(n), \quad B(n) = \Theta(1) \text{ (при } n = 0\text{)}$$
 
 ---
 
-**Процедура 1.9.5. Insert (внутренняя)**
+**Процедура 2.1.5. Insert (внутренняя)**
 ```
 01: InsertImpl(key, value, allowOverwrite)
 02:     size = Table1.size
@@ -175,7 +177,7 @@ $$W(n) = A(n) = \Theta(n), \quad B(n) = \Theta(1) \text{ (при } n = 0\text{)}
 
 **Анализ сложности:**
 
-Пусть $k_{\max} = \Theta(\log n)$ (из процедуры 1.9.3).
+Пусть $k_{\max} = \Theta(\log n)$ (из процедуры 2.1.3).
 
 *Худший случай* — выполняются все $k_{\max}$ итераций цикла (каждая за $\Theta(|key|)$ из-за пересчёта хеша) и полный откат по журналу:
 
@@ -193,7 +195,7 @@ $$A(n) = \Theta(1) \text{ (при фиксированном ключе)}$$
 
 ---
 
-**Процедура 1.9.6. Rehash**
+**Процедура 2.1.6. Rehash**
 ```
 01: RehashImpl(newTableSize)
 02:     items = []
@@ -242,7 +244,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(n)$$
 
 ---
 
-**Процедура 1.9.7. Contains Key**
+**Процедура 2.1.7. Contains Key**
 ```
 01: ContainsKeyImpl(key)
 02:     H = StdHash(key)
@@ -289,7 +291,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 
 ---
 
-**Процедура 1.9.8. Try Get Value**
+**Процедура 2.1.8. Try Get Value**
 ```
 01: TryGetValueImpl(key, value)
 02:     H = StdHash(key)
@@ -319,7 +321,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 
 ---
 
-**Процедура 1.9.9. Get Value**
+**Процедура 2.1.9. Get Value**
 ```
 01: GetValueImpl(key)
 02:     H = StdHash(key)
@@ -342,7 +344,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 
 ---
 
-**Процедура 1.9.10. Add**
+**Процедура 2.1.10. Add**
 ```
 01: AddImpl(key, value)
 02:     if Table1 is empty then
@@ -376,7 +378,7 @@ $$A(n) = \Theta(1) \text{ (ожидаемая амортизированная)}
 
 ---
 
-**Процедура 1.9.11. Insert Or Assign**
+**Процедура 2.1.11. Insert Or Assign**
 ```
 01: InsertOrAssignImpl(key, value)
 02:     if Table1 is empty then
@@ -399,7 +401,7 @@ $$W(n) = \Theta(n), \quad B(n) = \Theta(1), \quad A(n) = \Theta(1) \text{ (ож�
 
 ---
 
-**Процедура 1.9.12. Remove**
+**Процедура 2.1.12. Remove**
 ```
 01: RemoveImpl(key)
 02:     H = StdHash(key)
@@ -430,7 +432,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 
 ---
 
-**Процедура 1.9.13. Clear**
+**Процедура 2.1.13. Clear**
 ```
 01: ClearImpl()
 02:     KeysCount = 0
@@ -456,7 +458,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 
 ---
 
-**Процедура 1.9.14. Count**
+**Процедура 2.1.14. Count**
 ```
 01: CountImpl()
 02:     return KeysCount
@@ -470,30 +472,30 @@ $$W(n) = B(n) = A(n) = \Theta(1)$$
 
 ---
 
-**Сводная таблица сложности процедур раздела 1.9 (кукушкино хеширование)**
+**Сводная таблица сложности процедур раздела 2.1 (кукушкино хеширование)**
 
 | Процедура                |      $W(n)$      |      $B(n)$      |      $A(n)$      |
 |--------------------------|:----------------:|:----------------:|:----------------:|
-| 1.9.1. Hash1             |   $\Theta(1)$    |   $\Theta(1)$    |   $\Theta(1)$    |
-| 1.9.2. Hash2             |   $\Theta(1)$    |   $\Theta(1)$    |   $\Theta(1)$    |
-| 1.9.3. Get Max Kicks     | $\Theta(\log n)$ | $\Theta(\log n)$ | $\Theta(\log n)$ |
-| 1.9.4. Build             |   $\Theta(n)$    |   $\Theta(1)$    |   $\Theta(n)$    |
-| 1.9.5. Insert            | $\Theta(\log n)$ |   $\Theta(1)$    |   $\Theta(1)$    |
-| 1.9.6. Rehash            |   $\Theta(n)$    |   $\Theta(n)$    |   $\Theta(n)$    |
-| 1.9.7. Contains Key      |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |
-| 1.9.8. Try Get Value     |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |
-| 1.9.9. Get Value         |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |
-| 1.9.10. Add              |   $\Theta(n)$    |   $\Theta(1)$    |   $\Theta(1)$    |
-| 1.9.11. Insert Or Assign |   $\Theta(n)$    |   $\Theta(1)$    |   $\Theta(1)$    |
-| 1.9.12. Remove           |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |
-| 1.9.13. Clear            |   $\Theta(1)$    |   $\Theta(1)$    |   $\Theta(1)$    |
-| 1.9.14. Count            |   $\Theta(1)$    |   $\Theta(1)$    |   $\Theta(1)$    |
+| 2.1.1. Hash1             |   $\Theta(1)$    |   $\Theta(1)$    |   $\Theta(1)$    |
+| 2.1.2. Hash2             |   $\Theta(1)$    |   $\Theta(1)$    |   $\Theta(1)$    |
+| 2.1.3. Get Max Kicks     | $\Theta(\log n)$ | $\Theta(\log n)$ | $\Theta(\log n)$ |
+| 2.1.4. Build             |   $\Theta(n)$    |   $\Theta(1)$    |   $\Theta(n)$    |
+| 2.1.5. Insert            | $\Theta(\log n)$ |   $\Theta(1)$    |   $\Theta(1)$    |
+| 2.1.6. Rehash            |   $\Theta(n)$    |   $\Theta(n)$    |   $\Theta(n)$    |
+| 2.1.7. Contains Key      |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |
+| 2.1.8. Try Get Value     |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |
+| 2.1.9. Get Value         |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |
+| 2.1.10. Add              |   $\Theta(n)$    |   $\Theta(1)$    |   $\Theta(1)$    |
+| 2.1.11. Insert Or Assign |   $\Theta(n)$    |   $\Theta(1)$    |   $\Theta(1)$    |
+| 2.1.12. Remove           |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |  $\Theta(1)$ ★   |
+| 2.1.13. Clear            |   $\Theta(1)$    |   $\Theta(1)$    |   $\Theta(1)$    |
+| 2.1.14. Count            |   $\Theta(1)$    |   $\Theta(1)$    |   $\Theta(1)$    |
 
 > Здесь $n$ — количество элементов в таблице. ★ — **строгая** (не амортизированная) оценка для худшего случая: операция обращается к ровно двум позициям в двух массивах, без цикла и без зависимости от $n$. `Insert` в худшем случае — $\Theta(\log n)$ из-за цикла кикинга длиной $k_{\max} = \Theta(\log n)$; в среднем $\Theta(1)$ при $\alpha \le \alpha_{\max}$. $A(n) = \Theta(1)$ для `Add`/`InsertOrAssign` — ожидаемая амортизированная оценка с учётом редкого рехеширования.
 
 ---
 
-### 1.10 Совершенное хеширование
+### 2.2 Совершенное хеширование
 
 В рамках данной работы была разработана структура данных `PerfectHashDictionary<TKey, TValue>`, реализующая статический ассоциативный массив на основе двухуровневого совершенного хеширования (Perfect Hashing).
 
@@ -501,13 +503,13 @@ $$W(n) = B(n) = A(n) = \Theta(1)$$
 
 Хеш-функция обоих уровней:
 
-$$h(H,\, \text{seed},\, m) = \bigl((\text{seed} \cdot \text{SALT} + 1) \cdot H + \text{seed}\bigr) \bmod 2^{64} \bmod m,$$
+$$h(H, \text{seed}, m) = \bigl((\text{seed} \cdot \text{SALT} + 1) \cdot H + \text{seed}\bigr) \bmod 2^{64} \bmod m,$$
 
 где $H = \texttt{std::hash<TKey>\{\}(key)}$, $\text{SALT} = 2654435761$ (число Кнута). Структура `PhBucket` хранит тройку $(\text{offset},\, \text{size},\, \text{seed})$. Массив `_values` содержит слоты `DictSlot<TKey, TValue>` с полями `Item` и `Exists` (tombstone для логического удаления).
 
 ---
 
-**Процедура 1.10.1. Hash Raw (внутренняя)**
+**Процедура 2.2.1. Hash Raw (внутренняя)**
 ```
 01: HashRaw(stdHash, seed, tableSize)
 02:     return ((seed * SALT + 1) * stdHash + seed) mod tableSize
@@ -527,7 +529,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 
 ---
 
-**Процедура 1.10.2. Find Index (внутренняя)**
+**Процедура 2.2.2. Find Index (внутренняя)**
 ```
 01: FindIndexImpl(key)
 02:     H = StdHash(key)
@@ -564,7 +566,7 @@ $$\Rightarrow W(n) = B(n) = A(n) = \Theta(1)$$
 
 ---
 
-**Процедура 1.10.3. Find Seed (внутренняя)**
+**Процедура 2.2.3. Find Seed (внутренняя)**
 ```
 01: FindSeed(bucket, tableSize)
 02:     occupied = array[tableSize] of false
@@ -617,7 +619,7 @@ $$\Rightarrow W(b) = O(\mathtt{MAX\_ATTEMPTS} \cdot b^2) = \Theta(b^2), \quad A(
 
 ---
 
-**Процедура 1.10.4. Build (внутренняя)**
+**Процедура 2.2.4. Build (внутренняя)**
 ```
 01: BuildImpl(begin, end, size)
 02:     count = size;  tableSize = size
@@ -693,7 +695,7 @@ $$T_{\text{level1, per iter}} = \Theta(n) \Rightarrow T_{\text{level1, total}} =
 
 **Шаг 2 (нахождение localSeed для каждой корзины, при $\sum b_k^2 \le Cn$):**
 
-Из процедуры 1.10.3, ожидаемое время работы для корзины размером $b_k$:
+Из процедуры 2.2.3, ожидаемое время работы для корзины размером $b_k$:
 
 $$T_{\text{FindSeed}}(b_k) = O(1) \cdot T_{\text{attempt}}(b_k) = O(b_k^2)$$
 
@@ -719,7 +721,7 @@ $$W(n) = O(n \cdot \mathtt{MAX\_ATTEMPTS}^2) = O(n) \text{ (с высокой в
 
 ---
 
-**Процедура 1.10.5. Contains Key**
+**Процедура 2.2.5. Contains Key**
 ```
 01: ContainsKeyImpl(key)
 02:     flatIndex = FindIndexImpl(key)
@@ -738,13 +740,13 @@ $$W(n) = O(n \cdot \mathtt{MAX\_ATTEMPTS}^2) = O(n) \text{ (с высокой в
 
 **Анализ сложности:**
 
-Определяется целиком `FindIndex` (процедура 1.10.2):
+Определяется целиком `FindIndex` (процедура 2.2.2):
 
 $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 
 ---
 
-**Процедура 1.10.6. Try Get Value**
+**Процедура 2.2.6. Try Get Value**
 ```
 01: TryGetValueImpl(key, value)
 02:     flatIndex = FindIndexImpl(key)
@@ -764,7 +766,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 
 ---
 
-**Процедура 1.10.7. Get Value**
+**Процедура 2.2.7. Get Value**
 ```
 01: GetValueImpl(key)
 02:     flatIndex = FindIndexImpl(key)
@@ -782,7 +784,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 
 ---
 
-**Процедура 1.10.8. Add**
+**Процедура 2.2.8. Add**
 ```
 01: AddImpl(key, value)
 02:     flatIndex = FindIndexImpl(key)
@@ -816,7 +818,7 @@ $$W(n) = A(n) = \Theta(n) \text{ (перестройка совершенног�
 
 ---
 
-**Процедура 1.10.9. Insert Or Assign**
+**Процедура 2.2.9. Insert Or Assign**
 ```
 01: InsertOrAssignImpl(key, value)
 02:     flatIndex = FindIndexImpl(key)
@@ -844,7 +846,7 @@ $$B(n) = \Theta(1), \quad W(n) = A(n) = \Theta(n)$$
 
 ---
 
-**Процедура 1.10.10. Remove**
+**Процедура 2.2.10. Remove**
 ```
 01: RemoveImpl(key)
 02:     flatIndex = FindIndexImpl(key)
@@ -866,7 +868,7 @@ $$W(n) = B(n) = A(n) = \Theta(1) \quad \text{(строгая оценка)}$$
 
 ---
 
-**Процедура 1.10.11. Clear**
+**Процедура 2.2.11. Clear**
 ```
 01: ClearImpl()
 02:     for each slot in values do
@@ -888,7 +890,7 @@ $$W(n) = B(n) = A(n) = \Theta(n)$$
 
 ---
 
-**Процедура 1.10.12. Count**
+**Процедура 2.2.12. Count**
 ```
 01: CountImpl()
 02:     return count
@@ -900,28 +902,28 @@ $$W(n) = B(n) = A(n) = \Theta(1)$$
 
 ---
 
-**Сводная таблица сложности процедур раздела 1.10 (Совершенное хеширование)**
+**Сводная таблица сложности процедур раздела 2.2 (совершенное хеширование)**
 
 | Процедура                |    $W(n)$     |    $B(n)$     |    $A(n)$     |
 |--------------------------|:-------------:|:-------------:|:-------------:|
-| 1.10.1. Hash Raw         |  $\Theta(1)$  |  $\Theta(1)$  |  $\Theta(1)$  |
-| 1.10.2. Find Index       | $\Theta(1)$ ★ | $\Theta(1)$ ★ | $\Theta(1)$ ★ |
-| 1.10.3. Find Seed        | $\Theta(b^2)$ | $\Theta(b^2)$ | $\Theta(b^2)$ |
-| 1.10.4. Build            | $\Theta(n)$†  |  $\Theta(n)$  |  $\Theta(n)$  |
-| 1.10.5. Contains Key     | $\Theta(1)$ ★ | $\Theta(1)$ ★ | $\Theta(1)$ ★ |
-| 1.10.6. Try Get Value    | $\Theta(1)$ ★ | $\Theta(1)$ ★ | $\Theta(1)$ ★ |
-| 1.10.7. Get Value        | $\Theta(1)$ ★ | $\Theta(1)$ ★ | $\Theta(1)$ ★ |
-| 1.10.8. Add              |  $\Theta(n)$  |  $\Theta(1)$  |  $\Theta(n)$  |
-| 1.10.9. Insert Or Assign |  $\Theta(n)$  |  $\Theta(1)$  |  $\Theta(n)$  |
-| 1.10.10. Remove          | $\Theta(1)$ ★ | $\Theta(1)$ ★ | $\Theta(1)$ ★ |
-| 1.10.11. Clear           |  $\Theta(n)$  |  $\Theta(n)$  |  $\Theta(n)$  |
-| 1.10.12. Count           |  $\Theta(1)$  |  $\Theta(1)$  |  $\Theta(1)$  |
+| 2.2.1. Hash Raw          |  $\Theta(1)$  |  $\Theta(1)$  |  $\Theta(1)$  |
+| 2.2.2. Find Index        | $\Theta(1)$ ★ | $\Theta(1)$ ★ | $\Theta(1)$ ★ |
+| 2.2.3. Find Seed         | $\Theta(b^2)$ | $\Theta(b^2)$ | $\Theta(b^2)$ |
+| 2.2.4. Build             | $\Theta(n)$†  |  $\Theta(n)$  |  $\Theta(n)$  |
+| 2.2.5. Contains Key      | $\Theta(1)$ ★ | $\Theta(1)$ ★ | $\Theta(1)$ ★ |
+| 2.2.6. Try Get Value     | $\Theta(1)$ ★ | $\Theta(1)$ ★ | $\Theta(1)$ ★ |
+| 2.2.7. Get Value         | $\Theta(1)$ ★ | $\Theta(1)$ ★ | $\Theta(1)$ ★ |
+| 2.2.8. Add               |  $\Theta(n)$  |  $\Theta(1)$  |  $\Theta(n)$  |
+| 2.2.9. Insert Or Assign  |  $\Theta(n)$  |  $\Theta(1)$  |  $\Theta(n)$  |
+| 2.2.10. Remove           | $\Theta(1)$ ★ | $\Theta(1)$ ★ | $\Theta(1)$ ★ |
+| 2.2.11. Clear            |  $\Theta(n)$  |  $\Theta(n)$  |  $\Theta(n)$  |
+| 2.2.12. Count            |  $\Theta(1)$  |  $\Theta(1)$  |  $\Theta(1)$  |
 
 > Здесь $n$ — количество элементов; $b$ — размер конкретной корзины (для `FindSeed`). ★ — **строгая** (не амортизированная) оценка для худшего случая: ровно два хеш-вычисления и два обращения к массиву. † — $W(n) = \Theta(n)$ — ожидаемая оценка; детерминированная верхняя граница выше из-за `MAX_ATTEMPTS`, однако вероятность достижения этой границы экспоненциально мала. `Add`/`InsertOrAssign` с **новым** ключом вызывают полную перестройку — эти операции помечены `[[deprecated]]` в API; если ключ принадлежит исходному множеству (в том числе ранее удалённый tombstone), вставка выполняется за $\Theta(1)$.
 
 ---
 
-### 1.11 Расширенное тестирование производительности
+### 2.3 Расширенное тестирование производительности
 
 В дополнение к тестированию раздела 1.8 были проведены сравнительные замеры производительности реализаций `CuckooHashDictionary` и `PerfectHashDictionary` относительно эталона `std::unordered_map`. Тестирование выполнялось на разных типах ключей и различных объёмах данных, что позволяет наблюдать зависимость скорости от кэш-эффектов, длины ключа и размера таблицы.
 
@@ -932,37 +934,37 @@ $$W(n) = B(n) = A(n) = \Theta(1)$$
 
 ---
 
-**Таблица 1.11.1. CuckooHashDictionary vs std::unordered\_map**
+**Таблица 2.3.1. CuckooHashDictionary vs std::unordered\_map**
 
-| Тип ключа | Ключей | Длина ключа | Init `unordered_map` | Init `CuckooHash` | Init быстрее | Read `unordered_map` | Read `CuckooHash` | Read быстрее |
-|---|---:|---|---:|---:|---|---:|---:|---|
-| `std::string` | 1 000 000 | 10 | 416,612 мс | 544,636 мс | `unordered_map` ×1,31 | 140 нс | 105 нс | `CuckooHash` **×1,34** |
-| `std::string` | 1 000 000 | 1000 | 1357,28 мс | 3252,75 мс | `unordered_map` ×2,40 | 534 нс | 384 нс | `CuckooHash` **×1,39** |
-| `std::string` | 1 000 | 10 | 0,1701 мс | 0,6196 мс | `unordered_map` ×3,64 | 38 нс | 15 нс | `CuckooHash` **×2,55** |
-| `double` | 1 000 000 | — | 431,318 мс | 855,327 мс | `unordered_map` ×1,98 | 119 нс | 80 нс | `CuckooHash` **×1,49** |
-| `double` | 1 000 | — | 0,1478 мс | 0,3923 мс | `unordered_map` ×2,65 | 29 нс | 12 нс | `CuckooHash` **×2,33** |
-| `int` | 1 000 000 | — | 297,037 мс | 697,711 мс | `unordered_map` ×2,35 | 36 нс | 55 нс | `unordered_map` ×1,50 |
-| `int` | 1 000 | — | 0,1772 мс | 0,3305 мс | `unordered_map` ×1,87 | 9 нс | 6 нс | `CuckooHash` **×1,50** |
-| `int` | 1 000 000 | — | 603,641 мс | 406,804 мс | `CuckooHash` **×1,48** | 191 нс | 135 нс | `CuckooHash` **×1,41** |
-| `double` | 1 000 000 | — | 860,592 мс | 919,791 мс | `unordered_map` ×1,07 | 306 нс | 203 нс | `CuckooHash` **×1,51** |
-| `double` | 1 000 | — | 1,8202 мс | 2,8278 мс | `unordered_map` ×1,55 | ~0 нс | ~0 нс | `CuckooHash` **×2,17**\* |
+| Тип ключа     |    Ключей | Длина ключа | Init `unordered_map` | Init `CuckooHash` | Init быстрее           | Read `unordered_map` | Read `CuckooHash` | Read быстрее             |
+|---------------|----------:|-------------|---------------------:|------------------:|------------------------|---------------------:|------------------:|--------------------------|
+| `std::string` | 1 000 000 | 10          |           416,612 мс |        544,636 мс | `unordered_map` ×1,31  |               140 нс |            105 нс | `CuckooHash` **×1,34**   |
+| `std::string` | 1 000 000 | 1000        |           1357,28 мс |        3252,75 мс | `unordered_map` ×2,40  |               534 нс |            384 нс | `CuckooHash` **×1,39**   |
+| `std::string` |     1 000 | 10          |            0,1701 мс |         0,6196 мс | `unordered_map` ×3,64  |                38 нс |             15 нс | `CuckooHash` **×2,55**   |
+| `double`      | 1 000 000 | —           |           431,318 мс |        855,327 мс | `unordered_map` ×1,98  |               119 нс |             80 нс | `CuckooHash` **×1,49**   |
+| `double`      |     1 000 | —           |            0,1478 мс |         0,3923 мс | `unordered_map` ×2,65  |                29 нс |             12 нс | `CuckooHash` **×2,33**   |
+| `int`         | 1 000 000 | —           |           297,037 мс |        697,711 мс | `unordered_map` ×2,35  |                36 нс |             55 нс | `unordered_map` ×1,50    |
+| `int`         |     1 000 | —           |            0,1772 мс |         0,3305 мс | `unordered_map` ×1,87  |                 9 нс |              6 нс | `CuckooHash` **×1,50**   |
+| `int`         | 1 000 000 | —           |           603,641 мс |        406,804 мс | `CuckooHash` **×1,48** |               191 нс |            135 нс | `CuckooHash` **×1,41**   |
+| `double`      | 1 000 000 | —           |           860,592 мс |        919,791 мс | `unordered_map` ×1,07  |               306 нс |            203 нс | `CuckooHash` **×1,51**   |
+| `double`      |     1 000 | —           |            1,8202 мс |         2,8278 мс | `unordered_map` ×1,55  |                ~0 нс |             ~0 нс | `CuckooHash` **×2,17**\* |
 
 > \* При столь малых временах результат нестабилен из-за джиттера таймера; отношение приведено ориентировочно.
 
 ---
 
-**Таблица 1.11.2. PerfectHashDictionary vs std::unordered\_map**
+**Таблица 2.3.2. PerfectHashDictionary vs std::unordered\_map**
 
-| Тип ключа | Ключей | Длина ключа | Init `unordered_map` | Init `PerfectHash` | Init быстрее | Read `unordered_map` | Read `PerfectHash` | Read быстрее |
-|---|---:|---|---:|---:|---|---:|---:|---|
-| `std::string` | 1 000 000 | 10 | 444,826 мс | 1053,7 мс | `unordered_map` ×2,37 | 152 нс | 126 нс | `PerfectHash` **×1,20** |
-| `std::string` | 1 000 000 | 10 | 416,612 мс | 544,636 мс | `unordered_map` ×1,31 | 140 нс | 105 нс | `PerfectHash` **×1,34** |
-| `std::string` | 1 000 000 | 1000 | 1357,28 мс | 3252,75 мс | `unordered_map` ×2,40 | 534 нс | 384 нс | `PerfectHash` **×1,39** |
-| `std::string` | 1 000 | 10 | 0,1701 мс | 0,6196 мс | `unordered_map` ×3,64 | 38 нс | 15 нс | `PerfectHash` **×2,55** |
-| `double` | 1 000 000 | — | 431,318 мс | 855,327 мс | `unordered_map` ×1,98 | 119 нс | 80 нс | `PerfectHash` **×1,49** |
-| `double` | 1 000 | — | 0,1478 мс | 0,3923 мс | `unordered_map` ×2,65 | 29 нс | 12 нс | `PerfectHash` **×2,33** |
-| `int` | 1 000 000 | — | 297,037 мс | 697,711 мс | `unordered_map` ×2,35 | 36 нс | 55 нс | `unordered_map` ×1,50 |
-| `int` | 1 000 | — | 0,1772 мс | 0,3305 мс | `unordered_map` ×1,87 | 9 нс | 6 нс | `PerfectHash` **×1,50** |
+| Тип ключа     |    Ключей | Длина ключа | Init `unordered_map` | Init `PerfectHash` | Init быстрее          | Read `unordered_map` | Read `PerfectHash` | Read быстрее            |
+|---------------|----------:|-------------|---------------------:|-------------------:|-----------------------|---------------------:|-------------------:|-------------------------|
+| `std::string` | 1 000 000 | 10          |           444,826 мс |          1053,7 мс | `unordered_map` ×2,37 |               152 нс |             126 нс | `PerfectHash` **×1,20** |
+| `std::string` | 1 000 000 | 10          |           416,612 мс |         544,636 мс | `unordered_map` ×1,31 |               140 нс |             105 нс | `PerfectHash` **×1,34** |
+| `std::string` | 1 000 000 | 1000        |           1357,28 мс |         3252,75 мс | `unordered_map` ×2,40 |               534 нс |             384 нс | `PerfectHash` **×1,39** |
+| `std::string` |     1 000 | 10          |            0,1701 мс |          0,6196 мс | `unordered_map` ×3,64 |                38 нс |              15 нс | `PerfectHash` **×2,55** |
+| `double`      | 1 000 000 | —           |           431,318 мс |         855,327 мс | `unordered_map` ×1,98 |               119 нс |              80 нс | `PerfectHash` **×1,49** |
+| `double`      |     1 000 | —           |            0,1478 мс |          0,3923 мс | `unordered_map` ×2,65 |                29 нс |              12 нс | `PerfectHash` **×2,33** |
+| `int`         | 1 000 000 | —           |           297,037 мс |         697,711 мс | `unordered_map` ×2,35 |                36 нс |              55 нс | `unordered_map` ×1,50   |
+| `int`         |     1 000 | —           |            0,1772 мс |          0,3305 мс | `unordered_map` ×1,87 |                 9 нс |               6 нс | `PerfectHash` **×1,50** |
 
 ---
 
@@ -976,4 +978,4 @@ $$W(n) = B(n) = A(n) = \Theta(1)$$
 
 *Поведение при большом ключе (`len = 1000`).* При длинных строках доминирует стоимость `std::hash<std::string>`, одинаковая для всех структур. Разрыв в Read сокращается (×1,39 вместо ×2,55 для `len = 10`), что согласуется с теоретическим выводом: при фиксированном $|key|$ поиск занимает $\Theta(|key|)$, и именно эта составляющая ограничивает возможный выигрыш.
 
-*Вывод.* `CuckooHashDictionary` и `PerfectHashDictionary` обеспечивают **строгий** $O(1)$ поиск в худшем случае — в отличие от всех реализаций на основе открытой адресации и открытого хеширования из разделов 1.3–1.7, у которых $W(n) = \Theta(n)$. Это свойство делает их предпочтительными для сценариев с жёсткими требованиями к латентности, где недопустимы редкие, но дорогостоящие вырожденные случаи. Цена — более высокое время построения и, для `PerfectHash`, ограниченная поддержка мутирующих операций с новыми ключами.
+*Вывод.* `CuckooHashDictionary` и `PerfectHashDictionary` обеспечивают **строгий** $O(1)$ поиск в худшем случае — в отличие от всех реализаций на основе открытой адресации и открытого хеширования из разделов 1.3–1.7, у которых $W(n) = \Theta(n)$. Это свойство делает их предпочтительными для сценариев с жёсткими требованиями к латентности, где недопустимы редкие, но дорогостоящие вырождённые случаи. Цена — более высокое время построения и, для `PerfectHash`, ограниченная поддержка мутирующих операций с новыми ключами.
