@@ -30,11 +30,10 @@ template<CHashable TKey, typename TValue>
 class PerfectHashDictionary : public IDictionary<TKey, TValue> {
 public:
     PerfectHashDictionary() = delete;
-
     /// <summary>
     /// Создаёт словарь из initializer_list.
     /// Выполняет построение идеального хеша.
-    /// Сложность: O(n^1.5) с очень большой константой
+    /// Сложность: O(n) с очень большой константой
     /// </summary>
     PerfectHashDictionary(std::initializer_list<std::pair<TKey, TValue>> init) {
         _build(init.begin(), init.end(), init.size());
@@ -43,7 +42,7 @@ public:
     /// <summary>
     /// Создаёт словарь из вектора пар ключ-значение.
     /// Выполняет построение идеального хеша.
-    /// Сложность: O(n^1.5) с очень большой константой
+    /// Сложность: O(n) с очень большой константой
     /// </summary>
     PerfectHashDictionary(std::vector<std::pair<TKey, TValue>> init){
         _build(init.begin(), init.end(), init.size());
@@ -52,7 +51,7 @@ public:
     /// <summary>
     /// Создаёт словарь из диапазона итераторов.
     /// Выполняет построение идеального хеша.
-    /// Сложность: O(n^1.5) с очень большой константой
+    /// Сложность: O(n) с очень большой константой
     /// </summary>
     template<CPairIterator<TKey, TValue> TIter>
     PerfectHashDictionary(TIter begin, TIter end){
